@@ -25,7 +25,7 @@ extends Node
 const CHANNEL := "spawn"
 
 ## Registry name, so a game can find the director without a scene path.
-const SERVICE := &"dot_spawn_director"
+const SERVICE := &"gs_spawn_director"
 
 ## A site was chosen. The game does the moving; this addon only decides.
 signal chosen(key: String, choice: GSSpawnChoice)
@@ -480,7 +480,7 @@ func set_occupancy(site_id: StringName, count: int) -> void:
 
 func describe_lines() -> PackedStringArray:
 	var out := PackedStringArray()
-	out.append("dot-spawn: %d sites, %s selection" % [_sites.size(), rules.mode_name()])
+	out.append("gs-spawn: %d sites, %s selection" % [_sites.size(), rules.mode_name()])
 	out.append("  %d respawns queued" % _respawn_at.size())
 
 	if rules.wave_respawn:

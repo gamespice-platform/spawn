@@ -11,9 +11,9 @@ signal removed(entity: Variant, reason: StringName)
 signal pool_empty
 
 const KIND := "spawner"
-const ADDON := "dot_spawn"
+const ADDON := "gs_spawn"
 ## The folder before the underscore rename; read through [GSCfgLegacy] until its removal date.
-const LEGACY_ADDON := "dot-spawn"
+const LEGACY_ADDON := "gs-spawn"
 const RESPAWN_PICKUP := "on_pickup"
 const RESPAWN_TIMER := "on_timer"
 ## Nothing spawns until the host calls [method trigger].
@@ -247,7 +247,7 @@ static func from_profile(set: GSProfileSet, profile_id: String, p_factory: Calla
 	return from_values(profile_id, res.value.get_value, p_factory)
 
 
-## The same set over the pre-rename folder `cfg/addons/dot-spawn/`; warns once per file found there.
+## The same set over the pre-rename folder `cfg/addons/gs-spawn/`; warns once per file found there.
 static func _legacy_set(set: GSProfileSet) -> GSProfileSet:
 	var old := GSProfileSet.create(LEGACY_ADDON, set.game, KIND, schema())
 	old.roots = set.roots

@@ -251,9 +251,9 @@ func _test_bad_input() -> void:
 
 
 func _test_legacy_folder() -> void:
-	_section("the dashed cfg/addons/dot-spawn folder")
+	_section("the dashed cfg/addons/gs-spawn folder")
 	GSCfgLegacy.reset()
-	var base := "user://entity_spawner_test/cfg/addons/dot-spawn/spawner"
+	var base := "user://entity_spawner_test/cfg/addons/gs-spawn/spawner"
 	DirAccess.make_dir_recursive_absolute(base)
 	_write(base.path_join("old.yml"), "what: pistol\n")
 	var r := GSEntitySpawner.from_profile(_profile_set(), "old", _factory)
@@ -261,12 +261,12 @@ func _test_legacy_folder() -> void:
 	_check(GSCfgLegacy.warned_count() == 1, "and warns once")
 	GSEntitySpawner.from_profile(_profile_set(), "old", _factory)
 	_check(GSCfgLegacy.warned_count() == 1, "not twice")
-	var new_dir := "user://entity_spawner_test/cfg/addons/dot_spawn/spawner"
+	var new_dir := "user://entity_spawner_test/cfg/addons/gs_spawn/spawner"
 	DirAccess.make_dir_recursive_absolute(new_dir)
 	_write(new_dir.path_join("old.yml"), "what: shotgun\n")
 	var r2 := GSEntitySpawner.from_profile(_profile_set(), "old", _factory)
 	_check(r2.ok and r2.value.pool[0]["id"] == &"shotgun", "the new folder wins when both exist")
-	_check(GSEntitySpawner.ADDON == "dot_spawn", "the profile set reads the underscored folder")
+	_check(GSEntitySpawner.ADDON == "gs_spawn", "the profile set reads the underscored folder")
 	DirAccess.remove_absolute(base.path_join("old.yml"))
 	DirAccess.remove_absolute(new_dir.path_join("old.yml"))
 

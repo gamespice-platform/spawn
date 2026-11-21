@@ -73,7 +73,7 @@ const ACTIONS := "ignore,nudge,teleport,despawn,kill"
 
 
 func env_prefix() -> String:
-	return "DOT_SPAWN_CULL_"
+	return "GS_SPAWN_CULL_"
 
 
 func cli_prefix() -> String:

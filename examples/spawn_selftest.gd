@@ -1,6 +1,6 @@
 extends "res://examples/selftest/node_tests.gd"
 
-## Exercises dot-spawn with no level, mostly no nodes, and no renderer.
+## Exercises gs-spawn with no level, mostly no nodes, and no renderer.
 ##
 ## Which is nearly all of it, because nearly all of it is a decision. Sites are values,
 ## the selection is a pure function over an array of them, and the two halves that do
@@ -21,7 +21,7 @@ func _ready() -> void:
 
 
 func _run() -> void:
-	_line("dot-spawn self-test")
+	_line("gs-spawn self-test")
 	_line("")
 
 	_test_sites()
@@ -191,7 +191,7 @@ func _test_rules() -> void:
 	)
 
 	_check(r.mode_name() == "random", "a mode has a name for a log line")
-	_check(r.env_prefix() == "DOT_SPAWN_", "and the config layers the family's way")
+	_check(r.env_prefix() == "GS_SPAWN_", "and the config layers the family's way")
 
 
 func _test_conditions() -> void:

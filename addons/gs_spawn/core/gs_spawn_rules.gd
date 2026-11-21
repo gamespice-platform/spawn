@@ -168,7 +168,7 @@ var mode: int = 0
 
 
 func env_prefix() -> String:
-	return "DOT_SPAWN_"
+	return "GS_SPAWN_"
 
 
 func cli_prefix() -> String:

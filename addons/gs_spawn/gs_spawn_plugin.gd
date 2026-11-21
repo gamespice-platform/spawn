@@ -6,14 +6,14 @@ extends EditorPlugin
 ## No autoloads: a listen server runs a director for the game it is hosting and another
 ## for the one it is previewing, which is the case an autoload forbids.
 
-const _ICON := "res://addons/dot_spawn/icon_placeholder.svg"
+const _ICON := "res://addons/gs_spawn/icon_placeholder.svg"
 
 const _TYPES := [
-	["GSSpawnDirector", "Node", "res://addons/dot_spawn/runtime/dot_spawn_director.gd"],
-	["GSSpawnMarker3D", "Marker3D", "res://addons/dot_spawn/nodes/dot_spawn_marker_3d.gd"],
-	["GSSpawnMarker2D", "Marker2D", "res://addons/dot_spawn/nodes/dot_spawn_marker_2d.gd"],
-	["GSSpawnArea3D", "Area3D", "res://addons/dot_spawn/nodes/dot_spawn_area_3d.gd"],
-	["GSSpawnArea2D", "Area2D", "res://addons/dot_spawn/nodes/dot_spawn_area_2d.gd"],
+	["GSSpawnDirector", "Node", "res://addons/gs_spawn/runtime/gs_spawn_director.gd"],
+	["GSSpawnMarker3D", "Marker3D", "res://addons/gs_spawn/nodes/gs_spawn_marker_3d.gd"],
+	["GSSpawnMarker2D", "Marker2D", "res://addons/gs_spawn/nodes/gs_spawn_marker_2d.gd"],
+	["GSSpawnArea3D", "Area3D", "res://addons/gs_spawn/nodes/gs_spawn_area_3d.gd"],
+	["GSSpawnArea2D", "Area2D", "res://addons/gs_spawn/nodes/gs_spawn_area_2d.gd"],
 ]
 
 

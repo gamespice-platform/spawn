@@ -1,6 +1,6 @@
 # GSEntitySpawner: spawn anything from a profile
 
-`GSEntitySpawner` (`runtime/dot_entity_spawner.gd`) is the general sibling of the NPC spawners: it spawns whatever a factory `Callable` produces, keyed by an id from a weighted pool, on a timer or when the last one is taken. A weapon pickup is the first use. It is a `RefCounted` with no scene dependency: the host calls `advance(delta)` each tick, so a test drives it with a fake clock.
+`GSEntitySpawner` (`runtime/gs_entity_spawner.gd`) is the general sibling of the NPC spawners: it spawns whatever a factory `Callable` produces, keyed by an id from a weighted pool, on a timer or when the last one is taken. A weapon pickup is the first use. It is a `RefCounted` with no scene dependency: the host calls `advance(delta)` each tick, so a test drives it with a fake clock.
 
 ## Using it
 
@@ -38,14 +38,14 @@ Delays and positions draw from one `GSRandomStream` seeded by `seed`, so the sam
 
 ## Profiles: kind `spawner`
 
-`cfg/addons/dot_spawn/spawner/<id>.yml` (the dashed `dot-spawn` folder is still read through `GSCfgLegacy` until 2026-12-31), `cfg/game/<game>/spawner/<id>.yml`, server and user tiers as [dot-core profiles](../../dot-core/docs/profiles.md). Keys: `what` or `pool` (a list of `id`, `weight`, `stock`; not both), `count`, `max_alive`, `interval`, `respawn_delay`, `initial_delay`, `radius`, `jitter`, `respawn`, `enabled`, `phases`, `team_limit`, `class_limit`, `server_only`, `seed`. Unknown keys fail.
+`cfg/addons/gs_spawn/spawner/<id>.yml` (the dashed `gs-spawn` folder is still read through `GSCfgLegacy` until 2026-12-31), `cfg/game/<game>/spawner/<id>.yml`, server and user tiers as [gs-core profiles](../../gs-core/docs/profiles.md). Keys: `what` or `pool` (a list of `id`, `weight`, `stock`; not both), `count`, `max_alive`, `interval`, `respawn_delay`, `initial_delay`, `radius`, `jitter`, `respawn`, `enabled`, `phases`, `team_limit`, `class_limit`, `server_only`, `seed`. Unknown keys fail.
 
 ```gdscript
 var set := GSEntitySpawner.profile_set("mygame")
 var res := GSEntitySpawner.from_profile(set, "weapon_crate", my_factory)   # GSResult
 ```
 
-An empty pool, `what` with `pool`, an entry with no id or a negative weight is `CODE_INVALID`. `profile_check` knows the kind through `--schema addons/dot_spawn/runtime/dot_entity_spawner.gd` (it exposes `profile_schemas()`).
+An empty pool, `what` with `pool`, an entry with no id or a negative weight is `CODE_INVALID`. `profile_check` knows the kind through `--schema addons/gs_spawn/runtime/gs_entity_spawner.gd` (it exposes `profile_schemas()`).
 
 ## Watch and cull
 
@@ -65,7 +65,7 @@ s.factory = func(weapon_id: StringName, pos: Vector3, _i: int) -> Variant:
     return pickup
 ```
 
-`cfg/addons/dot_spawn/spawner/weapon_crate.yml` is a weighted pool of two weapons that respawns 20 seconds after a pickup.
+`cfg/addons/gs_spawn/spawner/weapon_crate.yml` is a weighted pool of two weapons that respawns 20 seconds after a pickup.
 
 ## Test
 

@@ -36,7 +36,7 @@ When every site fails, one is used anyway, loudly. A round where nobody spawns i
 
 `_rng` derives a fresh generator from `seed_value`, the request's tick and (with `per_key_stream`) its key, using GameSpice Core's `GSRandomStream.at`, and is never a member. A shared stream makes a spawn depend on how many other spawns happened first, so a server that processed two deaths this tick and a client that saw one get different points, and the player materialises in two places.
 
-The suite checks that two directors agree over many choices and that a different seed disagrees. The second half is the negative control; the same discipline as dot-player-controller's replay-determinism test.
+The suite checks that two directors agree over many choices and that a different seed disagrees. The second half is the negative control; the same discipline as gs-player-controller's replay-determinism test.
 
 ## Node traps
 
@@ -56,4 +56,4 @@ The suite checks that two directors agree over many choices and that a different
 
 It does not move anything, does not raycast, and does not know what health is. `can_see_fn` is supplied by the game, because this addon has no opinion about which collision layers count and GameSpice Physics already does.
 
-It does not replace dot-match's `GSSpawnPoint` / `GSSpawnSelector`, which stay where they are. Those are the match's own view: one point per player, picked by danger, dependency-free, enough for a deathmatch. Using both means deciding which one the match asks, and the game makes that call.
+It does not replace gs-match's `GSSpawnPoint` / `GSSpawnSelector`, which stay where they are. Those are the match's own view: one point per player, picked by danger, dependency-free, enough for a deathmatch. Using both means deciding which one the match asks, and the game makes that call.

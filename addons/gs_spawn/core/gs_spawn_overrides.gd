@@ -5,7 +5,7 @@ extends RefCounted
 ##
 ## The profile's `points` mapping holds id -> {pos, yaw, team, kind, enabled, weight, tags, removed}. An id the map already has is patched, any other id is a new `authored` point. Save writes the server tier, which is the exportable diff.
 
-const ADDON := "dot_spawn"
+const ADDON := "gs_spawn"
 const KIND := "spawn"
 const AUTHORED := &"authored"
 
