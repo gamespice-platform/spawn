@@ -16,7 +16,7 @@ const CHECKS := 339
 
 
 func _ready() -> void:
-	DotLog.set_level(DotLog.Level.ERROR)
+	GSLog.set_level(GSLog.Level.ERROR)
 	_run()
 
 
@@ -67,7 +67,7 @@ func _run() -> void:
 func _test_sites() -> void:
 	_section("a site")
 
-	var p := DotSpawnSite.point(&"red_start", Vector3(1, 2, 3), PI * 0.5, &"red")
+	var p := GSSpawnSite.point(&"red_start", Vector3(1, 2, 3), PI * 0.5, &"red")
 	_check(p.id == &"red_start", "carries a name")
 	_check(not p.is_area(), "a point is not an area")
 	_check(p.admits(&"red", &""), "and admits its own team")
@@ -94,7 +94,7 @@ func _test_sites() -> void:
 		"a point samples to exactly itself, whatever the generator says"
 	)
 
-	var a := DotSpawnSite.area(&"blue_base", Vector3.ZERO, Vector3(5, 0, 5), &"blue")
+	var a := GSSpawnSite.area(&"blue_base", Vector3.ZERO, Vector3(5, 0, 5), &"blue")
 	_check(a.is_area(), "an area is an area")
 
 	var inside := true
@@ -116,7 +116,7 @@ func _test_sites() -> void:
 		+ "point with extra steps"
 	)
 
-	var two_d := DotSpawnSite.point(&"flat", Vector3(7, 9, 0))
+	var two_d := GSSpawnSite.point(&"flat", Vector3(7, 9, 0))
 	two_d.is_2d = true
 	_check(two_d.position_2d() == Vector2(7, 9), "a 2D site reads back as a Vector2")
 	rng.seed = 3
@@ -132,22 +132,22 @@ func _test_sites() -> void:
 func _test_rules() -> void:
 	_section("rules")
 
-	var r := DotSpawnRules.new()
+	var r := GSSpawnRules.new()
 	_check(r.validate().ok, "the defaults validate")
-	_check(r.mode == DotSpawnRules.Mode.RANDOM, "and pick at random")
+	_check(r.mode == GSSpawnRules.Mode.RANDOM, "and pick at random")
 	_check(r.respawn_delay_ticks(RATE) == 192, "three seconds at 64 Hz is 192 ticks")
 	_check(r.protection_ticks(RATE) == 192, "with three seconds of protection by default")
 	_check(r.protection_breaks_on_distance and r.protection_bubble and absf(r.protection_break_distance - 0.6096) < 0.0001, "ending after two feet of travel, drawn as a bubble")
 
-	var dm := DotSpawnRules.deathmatch()
+	var dm := GSSpawnRules.deathmatch()
 	_check(
-		dm.mode == DotSpawnRules.Mode.RANDOM,
+		dm.mode == GSSpawnRules.Mode.RANDOM,
 		"deathmatch is random and nothing cleverer — a safest-first selector in a "
 		+ "free-for-all sends everyone to the same quiet corner"
 	)
 
-	var tdm := DotSpawnRules.team_deathmatch()
-	_check(tdm.mode == DotSpawnRules.Mode.SAFEST, "team deathmatch prefers the safest")
+	var tdm := GSSpawnRules.team_deathmatch()
+	_check(tdm.mode == GSSpawnRules.Mode.SAFEST, "team deathmatch prefers the safest")
 	_check(tdm.protection_ticks(RATE) == 128, "with two seconds of protection")
 	_check(
 		tdm.protection_breaks_on_attack,
@@ -155,22 +155,22 @@ func _test_rules() -> void:
 		+ "two-second invulnerability in a gunfight"
 	)
 
-	var elim := DotSpawnRules.elimination()
+	var elim := GSSpawnRules.elimination()
 	_check(not elim.respawn_enabled, "elimination does not respawn")
 
-	var obj := DotSpawnRules.objective()
+	var obj := GSSpawnRules.objective()
 	_check(obj.wave_respawn, "the objective preset respawns in waves")
 	_check(obj.friend_distance_weight < 0.0, "and prefers company")
 
-	var single := DotSpawnRules.single_start()
-	_check(single.mode == DotSpawnRules.Mode.FIRST, "a course uses one start, every time")
+	var single := GSSpawnRules.single_start()
+	_check(single.mode == GSSpawnRules.Mode.FIRST, "a course uses one start, every time")
 	_check(single.cooldown_ticks == 0, "with no cooldown, because it is the only one")
 
-	_check(DotSpawnRules.presets().size() == 5, "there are five presets")
-	_check(DotSpawnRules.preset(&"objective") != null, "and they resolve by name")
-	_check(DotSpawnRules.preset(&"nope") == null, "an unknown one resolves to nothing")
+	_check(GSSpawnRules.presets().size() == 5, "there are five presets")
+	_check(GSSpawnRules.preset(&"objective") != null, "and they resolve by name")
+	_check(GSSpawnRules.preset(&"nope") == null, "an unknown one resolves to nothing")
 
-	var bad := DotSpawnRules.new()
+	var bad := GSSpawnRules.new()
 	bad.wave_respawn = true
 	bad.wave_interval_sec = 0.0
 	# An interval of zero is clamped by the export range, so set it past the setter.
@@ -181,7 +181,7 @@ func _test_rules() -> void:
 		+ "set at all"
 	)
 
-	var no_fallback := DotSpawnRules.new()
+	var no_fallback := GSSpawnRules.new()
 	no_fallback.minimum_enemy_distance = 10.0
 	no_fallback.fall_back_when_nothing_passes = false
 	_check(
@@ -197,9 +197,9 @@ func _test_rules() -> void:
 func _test_conditions() -> void:
 	_section("conditions")
 
-	var site := DotSpawnSite.point(&"s", Vector3.ZERO)
+	var site := GSSpawnSite.point(&"s", Vector3.ZERO)
 
-	var floor_rule := DotSpawnConditions.MinimumEnemyDistance.new(8.0)
+	var floor_rule := GSSpawnConditions.MinimumEnemyDistance.new(8.0)
 	_check(
 		floor_rule.allows(site, {"enemies": []}),
 		"a distance floor allows a site with nobody near it"
@@ -215,7 +215,7 @@ func _test_conditions() -> void:
 	)
 	_check(floor_rule.reason().contains("8"), "and says why in metres")
 
-	var sight := DotSpawnConditions.OutOfSight.new(false, 500.0)
+	var sight := GSSpawnConditions.OutOfSight.new(false, 500.0)
 	var seen := func(_from: Vector3, _to: Vector3) -> bool: return true
 	var blind := func(_from: Vector3, _to: Vector3) -> bool: return false
 
@@ -237,7 +237,7 @@ func _test_conditions() -> void:
 		+ "the worst and penalising every site equally"
 	)
 
-	var hard_sight := DotSpawnConditions.OutOfSight.new(true)
+	var hard_sight := GSSpawnConditions.OutOfSight.new(true)
 	_check(
 		not hard_sight.allows(site, {"enemies": [Vector3.ONE], "can_see": seen}),
 		"a hard one vetoes instead"
@@ -247,12 +247,12 @@ func _test_conditions() -> void:
 		"and then has no opinion about score, because it already said no"
 	)
 
-	var occupied := DotSpawnConditions.NotOccupied.new(true)
+	var occupied := GSSpawnConditions.NotOccupied.new(true)
 	_check(occupied.allows(site, {}), "an empty site is not occupied")
 	site.occupants = 1
 	_check(not occupied.allows(site, {}), "an occupied one is vetoed")
 
-	var big := DotSpawnSite.area(&"a", Vector3.ZERO, Vector3(5, 0, 5))
+	var big := GSSpawnSite.area(&"a", Vector3.ZERO, Vector3(5, 0, 5))
 	big.occupants = 3
 	_check(
 		occupied.allows(big, {}),
@@ -260,8 +260,8 @@ func _test_conditions() -> void:
 		+ "reason areas exist"
 	)
 
-	var meta := DotSpawnConditions.MetaEquals.new("zone", "attackers")
-	var tagged := DotSpawnSite.point(&"t", Vector3.ZERO)
+	var meta := GSSpawnConditions.MetaEquals.new("zone", "attackers")
+	var tagged := GSSpawnSite.point(&"t", Vector3.ZERO)
 	tagged.meta = {"zone": "attackers"}
 	_check(meta.allows(tagged, {}), "a metadata condition matches")
 	tagged.meta = {"zone": "defenders"}
@@ -269,12 +269,12 @@ func _test_conditions() -> void:
 	tagged.meta = {}
 	_check(not meta.allows(tagged, {}), "and a site with no such key at all")
 
-	var mismatched := DotSpawnSite.point(&"m", Vector3.ZERO)
+	var mismatched := GSSpawnSite.point(&"m", Vector3.ZERO)
 	mismatched.meta = {"zone": 7}
 	_check(
 		not meta.allows(mismatched, {}),
 		"comparing a number against a string answers false rather than erroring, "
-		+ "because DotValue.same is total where == is not"
+		+ "because GSValue.same is total where == is not"
 	)
 
 	# --- And the same question asked of the REQUEST ---------------------------
@@ -283,10 +283,10 @@ func _test_conditions() -> void:
 	# entry point needs: a timer course whose every track starts somewhere else, an
 	# objective mode whose sites belong to a point, a class with its own door. Without
 	# it a game picks the site itself and the director chooses nothing.
-	var per := DotSpawnConditions.MetaMatchesRequest.new("track")
-	var main_site := DotSpawnSite.point(&"main", Vector3.ZERO)
+	var per := GSSpawnConditions.MetaMatchesRequest.new("track")
+	var main_site := GSSpawnSite.point(&"main", Vector3.ZERO)
 	main_site.meta = {"track": 0}
-	var bonus_site := DotSpawnSite.point(&"bonus", Vector3.ONE)
+	var bonus_site := GSSpawnSite.point(&"bonus", Vector3.ONE)
 	bonus_site.meta = {"track": 1}
 
 	var wants_bonus := {"extra": {"track": 1}}
@@ -303,7 +303,7 @@ func _test_conditions() -> void:
 		+ "ask' is not 'I asked for nothing'"
 	)
 
-	var untagged := DotSpawnSite.point(&"any", Vector3.ZERO)
+	var untagged := GSSpawnSite.point(&"any", Vector3.ZERO)
 	_check(
 		per.allows(untagged, wants_bonus),
 		"a site with no opinion is usable by anybody by default"
@@ -316,8 +316,8 @@ func _test_conditions() -> void:
 
 	# The site key and the request key are allowed to differ, because the level file and
 	# the game code are not written by the same person.
-	var renamed := DotSpawnConditions.MetaMatchesRequest.new("zone", "objective")
-	var point_site := DotSpawnSite.point(&"p", Vector3.ZERO)
+	var renamed := GSSpawnConditions.MetaMatchesRequest.new("zone", "objective")
+	var point_site := GSSpawnSite.point(&"p", Vector3.ZERO)
 	point_site.meta = {"zone": &"mid"}
 	_check(
 		renamed.allows(point_site, {"extra": {"objective": &"mid"}}),
@@ -325,11 +325,11 @@ func _test_conditions() -> void:
 	)
 
 	# `extra` is carried by `make`, which is what a caller actually uses.
-	var carried := DotSpawnRequest.make("ada", &"blue", &"rifleman", 12, {"track": 3})
+	var carried := GSSpawnRequest.make("ada", &"blue", &"rifleman", 12, {"track": 3})
 	_check(int(carried.extra.get("track", -1)) == 3, "make() carries the extra field")
 
 	var shared := {"track": 4}
-	var one := DotSpawnRequest.make("a", &"", &"", 0, shared)
+	var one := GSSpawnRequest.make("a", &"", &"", 0, shared)
 	shared["track"] = 9
 	_check(
 		int(one.extra.get("track", -1)) == 4,
@@ -341,54 +341,54 @@ func _test_conditions() -> void:
 func _test_selection() -> void:
 	_section("selection")
 
-	var rules := DotSpawnRules.new()
-	rules.mode = DotSpawnRules.Mode.FIRST
+	var rules := GSSpawnRules.new()
+	rules.mode = GSSpawnRules.Mode.FIRST
 	var d := _director(rules)
 
-	var empty := DotResult.success(null)
-	empty = d.choose(DotSpawnRequest.make("ada", &"", &"", 0))
+	var empty := GSResult.success(null)
+	empty = d.choose(GSSpawnRequest.make("ada", &"", &"", 0))
 	_check(
-		not empty.ok and empty.code() == DotError.CODE_STATE,
+		not empty.ok and empty.code() == GSError.CODE_STATE,
 		"a director with no sites says so rather than answering nothing"
 	)
 
 	var sites := _grid(5)
-	var res := d.choose_from(sites, DotSpawnRequest.make("ada", &"", &"", 0))
+	var res := d.choose_from(sites, GSSpawnRequest.make("ada", &"", &"", 0))
 	_check(res.ok, "with sites, it answers")
-	var choice: DotSpawnChoice = res.value
+	var choice: GSSpawnChoice = res.value
 	_check(choice.site.id == &"s0", "'first' picks the first")
 	_check(not choice.fell_back, "and did not have to compromise")
 	_check(choice.considered == 5, "reporting how many it looked at")
 	_check(choice.allowed == 5, "and how many passed")
 
-	rules.mode = DotSpawnRules.Mode.ROUND_ROBIN
+	rules.mode = GSSpawnRules.Mode.ROUND_ROBIN
 	var ids := PackedStringArray()
 	for i in range(7):
-		var r: DotResult = d.choose_from(sites, DotSpawnRequest.make("ada", &"", &"", i))
-		ids.append(String((r.value as DotSpawnChoice).site.id))
+		var r: GSResult = d.choose_from(sites, GSSpawnRequest.make("ada", &"", &"", i))
+		ids.append(String((r.value as GSSpawnChoice).site.id))
 	_check(
 		ids[0] == "s0" and ids[4] == "s4" and ids[5] == "s0",
 		"round robin goes round: %s" % ", ".join(ids)
 	)
 
-	rules.mode = DotSpawnRules.Mode.FURTHEST
+	rules.mode = GSSpawnRules.Mode.FURTHEST
 	d.enemies_fn = func(_team: StringName) -> Array: return [Vector3.ZERO]
-	var far: DotResult = d.choose_from(sites, DotSpawnRequest.make("ada", &"", &"", 0))
+	var far: GSResult = d.choose_from(sites, GSSpawnRequest.make("ada", &"", &"", 0))
 	_check(
-		(far.value as DotSpawnChoice).site.id == &"s4",
+		(far.value as GSSpawnChoice).site.id == &"s4",
 		"furthest picks the one furthest from the nearest enemy"
 	)
 
-	rules.mode = DotSpawnRules.Mode.NEAREST_FRIEND
+	rules.mode = GSSpawnRules.Mode.NEAREST_FRIEND
 	d.friends_fn = func(_team: StringName) -> Array: return [Vector3(30, 0, 0)]
-	var near: DotResult = d.choose_from(sites, DotSpawnRequest.make("ada", &"", &"", 0))
+	var near: GSResult = d.choose_from(sites, GSSpawnRequest.make("ada", &"", &"", 0))
 	_check(
-		(near.value as DotSpawnChoice).site.id == &"s3",
+		(near.value as GSSpawnChoice).site.id == &"s3",
 		"nearest-friend picks the one beside a team-mate"
 	)
 
 	d.friends_fn = func(_team: StringName) -> Array: return []
-	var alone: DotResult = d.choose_from(sites, DotSpawnRequest.make("ada", &"", &"", 0))
+	var alone: GSResult = d.choose_from(sites, GSSpawnRequest.make("ada", &"", &"", 0))
 	_check(
 		alone.ok,
 		"with nobody alive it still answers — no friends is no information, not an "
@@ -396,30 +396,30 @@ func _test_selection() -> void:
 	)
 
 	# Team filtering.
-	var mixed: Array[DotSpawnSite] = []
+	var mixed: Array[GSSpawnSite] = []
 	mixed.append_array(_grid(2, &"red"))
 	for s in _grid(2, &"blue"):
 		s.id = StringName("b" + String(s.id))
 		mixed.append(s)
 
-	rules.mode = DotSpawnRules.Mode.FIRST
-	var blue: DotResult = d.choose_from(mixed, DotSpawnRequest.make("ada", &"blue", &"", 0))
+	rules.mode = GSSpawnRules.Mode.FIRST
+	var blue: GSResult = d.choose_from(mixed, GSSpawnRequest.make("ada", &"blue", &"", 0))
 	_check(
-		(blue.value as DotSpawnChoice).site.team == &"blue",
+		(blue.value as GSSpawnChoice).site.team == &"blue",
 		"a team request only sees its own team's sites"
 	)
-	_check((blue.value as DotSpawnChoice).allowed == 2, "two of the four")
+	_check((blue.value as GSSpawnChoice).allowed == 2, "two of the four")
 
 	# Priority and cooldown, through the scorer.
-	rules.mode = DotSpawnRules.Mode.SAFEST
+	rules.mode = GSSpawnRules.Mode.SAFEST
 	d.enemies_fn = Callable()
 	var priority_sites := _grid(3)
 	priority_sites[2].priority = 5
-	var best: DotResult = d.choose_from(
-		priority_sites, DotSpawnRequest.make("ada", &"", &"", 0)
+	var best: GSResult = d.choose_from(
+		priority_sites, GSSpawnRequest.make("ada", &"", &"", 0)
 	)
 	_check(
-		(best.value as DotSpawnChoice).site.id == &"s2",
+		(best.value as GSSpawnChoice).site.id == &"s2",
 		"a site's own priority wins when nothing else separates them"
 	)
 
@@ -428,11 +428,11 @@ func _test_selection() -> void:
 	# the correct behaviour and would make this check unable to fail.
 	priority_sites[2].priority = 1
 	priority_sites[2].last_used_tick = 0
-	var after: DotResult = d.choose_from(
-		priority_sites, DotSpawnRequest.make("ada", &"", &"", 10)
+	var after: GSResult = d.choose_from(
+		priority_sites, GSSpawnRequest.make("ada", &"", &"", 10)
 	)
 	_check(
-		(after.value as DotSpawnChoice).site.id != &"s2",
+		(after.value as GSSpawnChoice).site.id != &"s2",
 		"and a recent use pushes it back down, when the cooldown costs more than the "
 		+ "priority is worth"
 	)
@@ -440,9 +440,9 @@ func _test_selection() -> void:
 	var vis_sites := _grid(3)
 	d.enemies_fn = func(_team: StringName) -> Array: return [Vector3(1000, 0, 0)]
 	d.can_see_fn = func(_from: Vector3, to: Vector3) -> bool: return to.x < 5.0
-	var unseen: DotResult = d.choose_from(vis_sites, DotSpawnRequest.make("ada", &"", &"", 0))
+	var unseen: GSResult = d.choose_from(vis_sites, GSSpawnRequest.make("ada", &"", &"", 0))
 	_check(
-		(unseen.value as DotSpawnChoice).site.id != &"s0",
+		(unseen.value as GSSpawnChoice).site.id != &"s0",
 		"and a site an enemy is looking at loses badly — spawning in front of somebody "
 		+ "already aiming is the worst thing a selector does"
 	)
@@ -453,11 +453,11 @@ func _test_selection() -> void:
 	d.enemies_fn = func(_team: StringName, key: String) -> Array:
 		asked[0] = key
 		return []
-	var _keyed: DotResult = d.choose_from(vis_sites, DotSpawnRequest.make("grace", &"", &"", 0))
+	var _keyed: GSResult = d.choose_from(vis_sites, GSSpawnRequest.make("grace", &"", &"", 0))
 	_check(asked[0] == "grace", "a callable that takes the key is told who is spawning")
 
 	_check(d.describe_lines().size() > 1, "a director describes itself")
-	_check(d.score_of(vis_sites[1], DotSpawnRequest.make("ada", &"", &"", 0)) != 0.0,
+	_check(d.score_of(vis_sites[1], GSSpawnRequest.make("ada", &"", &"", 0)) != 0.0,
 		"and can explain a site's score")
 
 	d.queue_free()
@@ -466,7 +466,7 @@ func _test_selection() -> void:
 func _test_determinism() -> void:
 	_section("determinism")
 
-	var rules := DotSpawnRules.deathmatch()
+	var rules := GSSpawnRules.deathmatch()
 	var a := _director(rules)
 	var b := _director(rules)
 	var sites := _grid(20)
@@ -475,10 +475,10 @@ func _test_determinism() -> void:
 	var varied := {}
 
 	for tick in range(40):
-		var ra: DotResult = a.choose_from(_grid(20), DotSpawnRequest.make("ada", &"", &"", tick))
-		var rb: DotResult = b.choose_from(_grid(20), DotSpawnRequest.make("ada", &"", &"", tick))
-		var ida := (ra.value as DotSpawnChoice).site.id
-		var idb := (rb.value as DotSpawnChoice).site.id
+		var ra: GSResult = a.choose_from(_grid(20), GSSpawnRequest.make("ada", &"", &"", tick))
+		var rb: GSResult = b.choose_from(_grid(20), GSSpawnRequest.make("ada", &"", &"", tick))
+		var ida := (ra.value as GSSpawnChoice).site.id
+		var idb := (rb.value as GSSpawnChoice).site.id
 		varied[ida] = true
 		if ida != idb:
 			same = false
@@ -491,15 +491,15 @@ func _test_determinism() -> void:
 	_check(varied.size() > 5, "and the choices are actually spread over the map")
 
 	# The negative control: a test that cannot fail is not a test.
-	var other := DotSpawnRules.deathmatch()
+	var other := GSSpawnRules.deathmatch()
 	other.seed_value = rules.seed_value + 1
 	var c := _director(other)
 	var differed := false
 
 	for tick in range(40):
-		var ra: DotResult = a.choose_from(_grid(20), DotSpawnRequest.make("ada", &"", &"", tick))
-		var rc: DotResult = c.choose_from(_grid(20), DotSpawnRequest.make("ada", &"", &"", tick))
-		if (ra.value as DotSpawnChoice).site.id != (rc.value as DotSpawnChoice).site.id:
+		var ra: GSResult = a.choose_from(_grid(20), GSSpawnRequest.make("ada", &"", &"", tick))
+		var rc: GSResult = c.choose_from(_grid(20), GSSpawnRequest.make("ada", &"", &"", tick))
+		if (ra.value as GSSpawnChoice).site.id != (rc.value as GSSpawnChoice).site.id:
 			differed = true
 
 	_check(differed, "and a different seed gives different ones, so the check can fail")
@@ -507,9 +507,9 @@ func _test_determinism() -> void:
 	# Two players on one tick.
 	var collided := 0
 	for tick in range(30):
-		var r1: DotResult = a.choose_from(_grid(20), DotSpawnRequest.make("ada", &"", &"", tick))
-		var r2: DotResult = a.choose_from(_grid(20), DotSpawnRequest.make("bob", &"", &"", tick))
-		if (r1.value as DotSpawnChoice).site.id == (r2.value as DotSpawnChoice).site.id:
+		var r1: GSResult = a.choose_from(_grid(20), GSSpawnRequest.make("ada", &"", &"", tick))
+		var r2: GSResult = a.choose_from(_grid(20), GSSpawnRequest.make("bob", &"", &"", tick))
+		if (r1.value as GSSpawnChoice).site.id == (r2.value as GSSpawnChoice).site.id:
 			collided += 1
 
 	_check(
@@ -527,10 +527,10 @@ func _test_determinism() -> void:
 func _test_fallback() -> void:
 	_section("falling back")
 
-	var rules := DotSpawnRules.new()
-	rules.mode = DotSpawnRules.Mode.FIRST
+	var rules := GSSpawnRules.new()
+	rules.mode = GSSpawnRules.Mode.FIRST
 	var d := _director(rules)
-	d.conditions = [DotSpawnConditions.MinimumEnemyDistance.new(1000.0)]
+	d.conditions = [GSSpawnConditions.MinimumEnemyDistance.new(1000.0)]
 	d.enemies_fn = func(_team: StringName) -> Array: return [Vector3.ZERO]
 
 	var fired: Array = []
@@ -538,13 +538,13 @@ func _test_fallback() -> void:
 		fired.append([key, why])
 	)
 
-	var res := d.choose_from(_grid(3), DotSpawnRequest.make("ada", &"", &"", 0))
+	var res := d.choose_from(_grid(3), GSSpawnRequest.make("ada", &"", &"", 0))
 	_check(
 		res.ok,
 		"when every site fails, one is used anyway — a round where nobody spawns is a "
 		+ "black screen the player cannot tell from a crash"
 	)
-	var choice: DotSpawnChoice = res.value
+	var choice: GSSpawnChoice = res.value
 	_check(choice.fell_back, "and the choice says it compromised")
 	_check(choice.reason != "", "with the reason attached")
 	_check(choice.allowed == 0, "and nothing passed")
@@ -555,7 +555,7 @@ func _test_fallback() -> void:
 	)
 
 	rules.fall_back_when_nothing_passes = false
-	var refused := d.choose_from(_grid(3), DotSpawnRequest.make("ada", &"", &"", 0))
+	var refused := d.choose_from(_grid(3), GSSpawnRequest.make("ada", &"", &"", 0))
 	_check(
 		not refused.ok,
 		"a game that would rather know can turn the fallback off"
@@ -565,9 +565,9 @@ func _test_fallback() -> void:
 	# A team with no sites at all.
 	rules.fall_back_when_nothing_passes = true
 	var red_only := _grid(3, &"red")
-	var blue: DotResult = d.choose_from(red_only, DotSpawnRequest.make("b", &"blue", &"", 0))
+	var blue: GSResult = d.choose_from(red_only, GSSpawnRequest.make("b", &"blue", &"", 0))
 	_check(
-		blue.ok and (blue.value as DotSpawnChoice).fell_back,
+		blue.ok and (blue.value as GSSpawnChoice).fell_back,
 		"and a team with no sites of its own gets one of somebody else's, loudly"
 	)
 
@@ -577,7 +577,7 @@ func _test_fallback() -> void:
 func _test_respawns() -> void:
 	_section("respawn timers")
 
-	var rules := DotSpawnRules.new()
+	var rules := GSSpawnRules.new()
 	rules.respawn_delay_sec = 2.0
 	var d := _director(rules)
 
@@ -622,7 +622,7 @@ func _test_respawns() -> void:
 	_check(d.queue_respawn("ada", 0) == -1, "a mode that does not respawn queues nothing")
 
 	# Waves.
-	var wave_rules := DotSpawnRules.objective()
+	var wave_rules := GSSpawnRules.objective()
 	var w := _director(wave_rules)
 	var first := w.queue_respawn("ada", 0)
 	var second := w.queue_respawn("bob", 30)
@@ -645,7 +645,7 @@ func _test_bubble() -> void:
 	_section("bubble")
 	var body := Node3D.new()
 	add_child(body)
-	var b := DotSpawnBubble3D.new()
+	var b := GSSpawnBubble3D.new()
 	body.add_child(b)
 	_check(not b.visible, "a new bubble is hidden")
 	_check(not b.is_processing(), "and a hidden bubble does no per-frame work")
@@ -659,7 +659,7 @@ func _test_bubble() -> void:
 	b.sync(true)
 	body.add_child(b)
 	_check(b.is_processing(), "shown while out of the tree, it animates once back in")
-	var b2 := DotSpawnBubble3D.new()
+	var b2 := GSSpawnBubble3D.new()
 	body.add_child(b2)
 	_check(b2._mat != b._mat and b2._mat.shader == b._mat.shader, "two bubbles share one compiled Shader, each with its own material")
 	body.queue_free()
@@ -668,9 +668,9 @@ func _test_bubble() -> void:
 func _test_protection() -> void:
 	_section("protection")
 
-	var rules := DotSpawnRules.new()
+	var rules := GSSpawnRules.new()
 	rules.protection_sec = 2.0
-	var p := DotSpawnProtection.new(rules)
+	var p := GSSpawnProtection.new(rules)
 
 	var ended: Array = []
 	p.ended.connect(func(key: String, why: StringName, _tick: int) -> void:
@@ -741,10 +741,10 @@ func _test_protection() -> void:
 ## A director grants protection as part of choosing and advances it.
 func _protection_via_director() -> void:
 	# Through the director.
-	var d := _director(DotSpawnRules.team_deathmatch())
-	var res := d.choose_from(_grid(3), DotSpawnRequest.make("ada", &"", &"", 0))
+	var d := _director(GSSpawnRules.team_deathmatch())
+	var res := d.choose_from(_grid(3), GSSpawnRequest.make("ada", &"", &"", 0))
 	_check(
-		(res.value as DotSpawnChoice).protected_until > 0,
+		(res.value as GSSpawnChoice).protected_until > 0,
 		"a director grants protection as part of choosing, so no caller has to remember"
 	)
 	_check(d.protection.is_protected("ada", 10), "and the ledger knows")
@@ -755,7 +755,7 @@ func _protection_via_director() -> void:
 
 
 ## Distance: two feet of travel in any direction, once, from where it was granted.
-func _protection_distance(rules: DotSpawnRules, p: DotSpawnProtection, ended: Array) -> void:
+func _protection_distance(rules: GSSpawnRules, p: GSSpawnProtection, ended: Array) -> void:
 	# Distance: two feet of travel in any direction, once, from where it was granted.
 	rules.protection_sec = 0.5
 	rules.protection_breaks_on_attack = true

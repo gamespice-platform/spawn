@@ -9,8 +9,8 @@ var _failed := 0
 var _section_count := 0
 
 
-func _director(rules: DotSpawnRules) -> DotSpawnDirector:
-	var d := DotSpawnDirector.new()
+func _director(rules: GSSpawnRules) -> GSSpawnDirector:
+	var d := GSSpawnDirector.new()
 	d.rules = rules
 	d.tick_rate = RATE
 	d.register_service = false
@@ -18,11 +18,11 @@ func _director(rules: DotSpawnRules) -> DotSpawnDirector:
 	return d
 
 
-func _grid(count: int, team: StringName = &"") -> Array[DotSpawnSite]:
-	var out: Array[DotSpawnSite] = []
+func _grid(count: int, team: StringName = &"") -> Array[GSSpawnSite]:
+	var out: Array[GSSpawnSite] = []
 
 	for i in range(count):
-		out.append(DotSpawnSite.point(
+		out.append(GSSpawnSite.point(
 			StringName("s%d" % i), Vector3(float(i) * 10.0, 0, 0), 0.0, team
 		))
 

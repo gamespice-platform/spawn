@@ -1,4 +1,4 @@
-class_name DotSpawnProtection
+class_name GSSpawnProtection
 extends RefCounted
 
 ## Who is briefly un-killable after entering the world, and when that stops.
@@ -15,7 +15,7 @@ extends RefCounted
 
 # No log channel: a ledger asked once per hit and once per tick. Every change it makes
 # is a signal (granted, ended with a reason), and a line per grant would be one per
-# spawn; DotSpawnDirector, which decides the spawn, is what logs.
+# spawn; GSSpawnDirector, which decides the spawn, is what logs.
 
 ## Somebody's protection ended, and why: [code]&"expired"[/code],
 ## [code]&"attacked"[/code], [code]&"left"[/code], [code]&"moved"[/code] or [code]&"revoked"[/code].
@@ -24,7 +24,7 @@ signal ended(key: String, reason: StringName, tick: int)
 ## Granted.
 signal granted(key: String, until_tick: int)
 
-var rules: DotSpawnRules = null
+var rules: GSSpawnRules = null
 
 ## key -> the tick protection runs out on.
 var _until: Dictionary = {}
@@ -37,8 +37,8 @@ var _origin: Dictionary = {}
 var _anchor: Dictionary = {}
 
 
-func _init(p_rules: DotSpawnRules = null) -> void:
-	rules = p_rules if p_rules != null else DotSpawnRules.new()
+func _init(p_rules: GSSpawnRules = null) -> void:
+	rules = p_rules if p_rules != null else GSSpawnRules.new()
 
 
 ## Protects [param key] for the rules' duration, starting now.
@@ -207,7 +207,7 @@ func describe_lines() -> PackedStringArray:
 
 
 func describe() -> String:
-	return "DotSpawnProtection(%d protected)" % _until.size()
+	return "GSSpawnProtection(%d protected)" % _until.size()
 
 
 func _end(key: String, reason: StringName, tick: int) -> void:

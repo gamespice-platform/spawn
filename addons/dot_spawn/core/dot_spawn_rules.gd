@@ -1,6 +1,6 @@
 @tool
-class_name DotSpawnRules
-extends DotConfig
+class_name GSSpawnRules
+extends GSConfig
 
 ## Every policy about where things enter the world, in one layered configuration.
 
@@ -156,7 +156,7 @@ var mode: int = 0
 ## Zero or less disables the distance check whatever [member protection_breaks_on_distance] says.
 @export_range(0.0, 100.0, 0.01) var protection_break_distance: float = 0.6096
 
-## Whether a protected body is drawn inside a bubble (see DotSpawnBubble). Presentation
+## Whether a protected body is drawn inside a bubble (see GSSpawnBubble). Presentation
 ## only: the ledger never reads it, a client or a game's renderer does.
 @export var protection_bubble: bool = true
 
@@ -190,17 +190,17 @@ func strategies() -> PackedStringArray:
 const STRATEGIES := ["map", "scatter", "spread", "grouped", "near_team", "far_from_enemies"]
 
 
-func validate() -> DotResult:
+func validate() -> GSResult:
 	for name in strategies():
 		if not STRATEGIES.has(name):
-			return DotResult.fail(DotError.CODE_INVALID, "Unknown spawn strategy '%s'." % name)
+			return GSResult.fail(GSError.CODE_INVALID, "Unknown spawn strategy '%s'." % name)
 
 	if spread_min > spread_distance:
-		return DotResult.fail(DotError.CODE_INVALID, "spread_min %.1f is above spread_distance %.1f." % [spread_min, spread_distance])
+		return GSResult.fail(GSError.CODE_INVALID, "spread_min %.1f is above spread_distance %.1f." % [spread_min, spread_distance])
 
 	if wave_respawn and wave_interval_sec <= 0.0:
-		return DotResult.fail(
-			DotError.CODE_INVALID,
+		return GSResult.fail(
+			GSError.CODE_INVALID,
 			"Wave respawns with an interval of %.2f s never come round."
 			% wave_interval_sec
 		)
@@ -209,15 +209,15 @@ func validate() -> DotResult:
 		# Not an error. A furthest-first selector with protection and no floor is a
 		# legitimate, if unusual, combination and refusing it would be this addon
 		# deciding a game's design for it.
-		DotLog.debug(
+		GSLog.debug(
 			"spawn",
 			"protection with a furthest-first selector and no minimum distance",
 			{"protection_sec": protection_sec}
 		)
 
 	if minimum_enemy_distance > 0.0 and not fall_back_when_nothing_passes:
-		return DotResult.fail(
-			DotError.CODE_INVALID,
+		return GSResult.fail(
+			GSError.CODE_INVALID,
 			(
 				"A hard minimum enemy distance of %.1f m with no fallback means a "
 				+ "crowded round where nobody spawns at all, and a player looking at "
@@ -225,7 +225,7 @@ func validate() -> DotResult:
 			) % minimum_enemy_distance
 		)
 
-	return DotResult.success(null)
+	return GSResult.success(null)
 
 
 ## The selection modes, by their [member mode] value.
@@ -271,7 +271,7 @@ func wave_interval_ticks(tick_rate: int) -> int:
 # --- Presets ----------------------------------------------------------------
 
 ## Everybody anywhere, three seconds later, no protection.
-static func deathmatch() -> DotSpawnRules:
+static func deathmatch() -> GSSpawnRules:
 	# Not this class's own name. A script that names itself in an expression, loaded after
 	# its base, cuts Godot 4.7.2's exit teardown short and leaks every script loaded before
 	# it. See docs/gdscript-hazards.md, "A script that names itself".
@@ -285,7 +285,7 @@ static func deathmatch() -> DotSpawnRules:
 
 
 ## Team sides, safest-first, five seconds, two seconds of protection.
-static func team_deathmatch() -> DotSpawnRules:
+static func team_deathmatch() -> GSSpawnRules:
 	var r := new()
 	r.mode = Mode.SAFEST
 	r.respawn_delay_sec = 5.0
@@ -296,7 +296,7 @@ static func team_deathmatch() -> DotSpawnRules:
 
 
 ## One spawn at the start of a round and no respawning at all.
-static func elimination() -> DotSpawnRules:
+static func elimination() -> GSSpawnRules:
 	var r := new()
 	r.mode = Mode.SAFEST
 	r.respawn_enabled = false
@@ -305,7 +305,7 @@ static func elimination() -> DotSpawnRules:
 
 
 ## Waves every ten seconds, protection while the gate is open.
-static func objective() -> DotSpawnRules:
+static func objective() -> GSSpawnRules:
 	var r := new()
 	r.mode = Mode.NEAREST_FRIEND
 	r.wave_respawn = true
@@ -317,7 +317,7 @@ static func objective() -> DotSpawnRules:
 
 
 ## One start point, used every time. A course, a tutorial, a timed run.
-static func single_start() -> DotSpawnRules:
+static func single_start() -> GSSpawnRules:
 	var r := new()
 	r.mode = Mode.FIRST
 	r.respawn_delay_sec = 0.0
@@ -337,7 +337,7 @@ static func presets() -> Dictionary:
 	}
 
 
-static func preset(p_id: StringName) -> DotSpawnRules:
+static func preset(p_id: StringName) -> GSSpawnRules:
 	var table := presets()
 
 	if not table.has(p_id):

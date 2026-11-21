@@ -3,8 +3,8 @@ extends "res://examples/selftest/selftest_base.gd"
 ## The mover watch and cull sections.
 
 
-func _watch_rules() -> DotSpawnCullRules:
-	var r := DotSpawnCullRules.new()
+func _watch_rules() -> GSSpawnCullRules:
+	var r := GSSpawnCullRules.new()
 	r.enabled = true
 	r.budget_usec = 0
 	r.far_sec = 5.0
@@ -12,8 +12,8 @@ func _watch_rules() -> DotSpawnCullRules:
 
 
 ## Runs `seconds` of ticks; `mover` is (id, t) -> [position, has_goal]. Returns all verdicts.
-func _drive(w: DotSpawnWatch, ids: Array, seconds: float, mover: Callable, cull: DotSpawnCull = null) -> Array[DotSpawnVerdict]:
-	var all: Array[DotSpawnVerdict] = []
+func _drive(w: GSSpawnWatch, ids: Array, seconds: float, mover: Callable, cull: GSSpawnCull = null) -> Array[GSSpawnVerdict]:
+	var all: Array[GSSpawnVerdict] = []
 	var dt := 1.0 / RATE
 	var t := 0.0
 
@@ -33,7 +33,7 @@ func _drive(w: DotSpawnWatch, ids: Array, seconds: float, mover: Callable, cull:
 	return all
 
 
-func _count(vs: Array[DotSpawnVerdict], id: Variant, category: int) -> int:
+func _count(vs: Array[GSSpawnVerdict], id: Variant, category: int) -> int:
 	var n := 0
 
 	for v in vs:
@@ -45,12 +45,12 @@ func _count(vs: Array[DotSpawnVerdict], id: Variant, category: int) -> int:
 
 func _test_watch() -> void:
 	_section("Mover watch")
-	var off := DotSpawnWatch.new()
+	var off := GSSpawnWatch.new()
 	_check(not off.rules.enabled, "off by default")
 	off.report(1, Vector3.ZERO, &"common", true)
 	_check(off.advance(10.0).is_empty(), "and a disabled watch finds nothing")
 
-	var w := DotSpawnWatch.new(_watch_rules())
+	var w := GSSpawnWatch.new(_watch_rules())
 	var mover := func(id: Variant, t: float) -> Array:
 		match id:
 			"stuck": return [Vector3(1, 0, 1) + Vector3(0.1, 0, 0) * sin(t * 3.0), true]
@@ -69,17 +69,17 @@ func _test_watch() -> void:
 	var ids := ["stuck", "idle", "slow", "blocked", "fell", "nan", "offnav", "cutoff", "lost"]
 	var vs := _drive(w, ids, 12.0, mover)
 
-	_check(_count(vs, "stuck", DotSpawnVerdict.Category.STUCK) > 0, "a mover with a goal that jitters in place is stuck")
-	_check(_count(vs, "idle", DotSpawnVerdict.Category.STUCK) == 0, "a mover without a goal is never stuck")
-	_check(_count(vs, "slow", DotSpawnVerdict.Category.STUCK) == 0, "a slow mover that keeps going is not stuck")
-	_check(_count(vs, "blocked", DotSpawnVerdict.Category.STUCK) == 0, "one blocked for 2.5 s then freed is not stuck")
-	_check(_count(vs, "fell", DotSpawnVerdict.Category.FELL_OUT) > 0, "below kill height fell out")
-	_check(_count(vs, "nan", DotSpawnVerdict.Category.FELL_OUT) > 0, "a non-finite position fell out")
-	_check(_count(vs, "offnav", DotSpawnVerdict.Category.OFF_NAV) > 0, "far from the navigation is off nav")
-	_check(_count(vs, "cutoff", DotSpawnVerdict.Category.UNREACHABLE) > 0, "no path from any player is unreachable")
-	_check(_count(vs, "lost", DotSpawnVerdict.Category.FAR) > 0, "far from every player for long is lost")
-	_check(_count(vs, "idle", DotSpawnVerdict.Category.FAR) == 0, "one within reach of a player is not lost")
-	_check(_count(vs, "blocked", DotSpawnVerdict.Category.OFF_NAV) == 0, "and nothing is off nav without a reading")
+	_check(_count(vs, "stuck", GSSpawnVerdict.Category.STUCK) > 0, "a mover with a goal that jitters in place is stuck")
+	_check(_count(vs, "idle", GSSpawnVerdict.Category.STUCK) == 0, "a mover without a goal is never stuck")
+	_check(_count(vs, "slow", GSSpawnVerdict.Category.STUCK) == 0, "a slow mover that keeps going is not stuck")
+	_check(_count(vs, "blocked", GSSpawnVerdict.Category.STUCK) == 0, "one blocked for 2.5 s then freed is not stuck")
+	_check(_count(vs, "fell", GSSpawnVerdict.Category.FELL_OUT) > 0, "below kill height fell out")
+	_check(_count(vs, "nan", GSSpawnVerdict.Category.FELL_OUT) > 0, "a non-finite position fell out")
+	_check(_count(vs, "offnav", GSSpawnVerdict.Category.OFF_NAV) > 0, "far from the navigation is off nav")
+	_check(_count(vs, "cutoff", GSSpawnVerdict.Category.UNREACHABLE) > 0, "no path from any player is unreachable")
+	_check(_count(vs, "lost", GSSpawnVerdict.Category.FAR) > 0, "far from every player for long is lost")
+	_check(_count(vs, "idle", GSSpawnVerdict.Category.FAR) == 0, "one within reach of a player is not lost")
+	_check(_count(vs, "blocked", GSSpawnVerdict.Category.OFF_NAV) == 0, "and nothing is off nav without a reading")
 	_check(w.ever_stuck_count() == 1, "only the stuck mover is recorded as ever stuck")
 	_check(w.kind_stats().has(&"common") and w.kind_stats()[&"common"]["stuck_sec"] > 0.0, "stuck seconds are kept per kind")
 	_check(not w.worst_spots().is_empty(), "and the worst spots")
@@ -90,9 +90,9 @@ func _test_watch() -> void:
 	w.forget("stuck")
 	_check(w.tracked() == before - 2, "forgetting removes a mover")
 	var more := _drive(w, ["slow", "blocked", "fell", "nan", "offnav", "cutoff", "lost"], 1.0, mover)
-	_check(_count(more, "idle", DotSpawnVerdict.Category.STUCK) == 0 and w.tracked() == before - 2, "and the rest keep being sampled")
+	_check(_count(more, "idle", GSSpawnVerdict.Category.STUCK) == 0 and w.tracked() == before - 2, "and the rest keep being sampled")
 
-	var big := DotSpawnWatch.new(_watch_rules())
+	var big := GSSpawnWatch.new(_watch_rules())
 	var mover2 := func(id: Variant, t: float) -> Array:
 		return [Vector3(float(id % 100) * 3.0, 0, float(id / 100) * 3.0 + t * 1.5), true]
 	var many: Array = []
@@ -109,7 +109,7 @@ func _test_watch() -> void:
 
 	var tight := _watch_rules()
 	tight.budget_usec = 1
-	var capped := DotSpawnWatch.new(tight)
+	var capped := GSSpawnWatch.new(tight)
 	_drive(capped, many, 1.0, mover2)
 	_check(capped.budget_trips > 0, "a tiny budget cuts a tick short and counts it")
 
@@ -117,12 +117,12 @@ func _test_watch() -> void:
 func _test_cull() -> void:
 	_section("Cull decisions")
 	var rules := _watch_rules()
-	var cull := DotSpawnCull.new(rules)
-	var cat := DotSpawnVerdict.Category
-	var act := DotSpawnDecision.Action
+	var cull := GSSpawnCull.new(rules)
+	var cat := GSSpawnVerdict.Category
+	var act := GSSpawnDecision.Action
 
-	var make := func(id: Variant, c: int, secs: float, t: float, kind: StringName = &"common") -> DotSpawnVerdict:
-		var v := DotSpawnVerdict.new()
+	var make := func(id: Variant, c: int, secs: float, t: float, kind: StringName = &"common") -> GSSpawnVerdict:
+		var v := GSSpawnVerdict.new()
 		v.id = id
 		v.category = c
 		v.seconds = secs
@@ -131,7 +131,7 @@ func _test_cull() -> void:
 		v.position = Vector3(1, 0, 1)
 		return v
 
-	_check(DotSpawnCull.new().decide(make.call("a", cat.STUCK, 5.0, 0.0)).action == act.IGNORE, "a disabled cull ignores everything")
+	_check(GSSpawnCull.new().decide(make.call("a", cat.STUCK, 5.0, 0.0)).action == act.IGNORE, "a disabled cull ignores everything")
 	_check(rules.fell_out_action == act.DESPAWN and rules.far_action == act.DESPAWN, "the default action is despawn, not kill")
 	_check(cull.decide(make.call("f", cat.FELL_OUT, 0.0, 0.0)).action == act.DESPAWN, "fell out is despawned at once")
 
@@ -166,24 +166,24 @@ func _test_cull() -> void:
 	rules.exempt_kinds = PackedStringArray(["boss"])
 	_check(cull.decide(make.call("b", cat.FELL_OUT, 0.0, 0.0, &"boss")).reason == "exempt", "an exempt kind is left alone")
 
-	var batch: Array[DotSpawnVerdict] = [make.call("m", cat.FAR, 20.0, 100.0), make.call("m", cat.FELL_OUT, 0.0, 100.0)]
+	var batch: Array[GSSpawnVerdict] = [make.call("m", cat.FAR, 20.0, 100.0), make.call("m", cat.FELL_OUT, 0.0, 100.0)]
 	var picked := cull.process(batch)
 	_check(picked.size() == 1 and picked[0].verdict.category == cat.FELL_OUT, "a batch yields one decision per mover, its worst")
 
 	var log: Array = []
-	cull.despawn_fn = func(id: Variant, _v: DotSpawnVerdict) -> void: log.append(id)
-	var batch2: Array[DotSpawnVerdict] = [make.call("n", cat.FELL_OUT, 0.0, 200.0)]
+	cull.despawn_fn = func(id: Variant, _v: GSSpawnVerdict) -> void: log.append(id)
+	var batch2: Array[GSSpawnVerdict] = [make.call("n", cat.FELL_OUT, 0.0, 200.0)]
 	_check(cull.apply(cull.process(batch2)) == 1 and log == ["n"], "apply hands a decision to the host's callable")
 	_check(cull.describe_lines().size() >= 2 and cull.describe().contains("despawn"), "the cull describes itself")
 
-	var w := DotSpawnWatch.new(_watch_rules())
-	var c2 := DotSpawnCull.new(w.rules)
+	var w := GSSpawnWatch.new(_watch_rules())
+	var c2 := GSSpawnCull.new(w.rules)
 	var removed: Array = []
-	c2.despawn_fn = func(id: Variant, _v: DotSpawnVerdict) -> void:
+	c2.despawn_fn = func(id: Variant, _v: GSSpawnVerdict) -> void:
 		removed.append(id)
 		w.forget(id)
 	var nudged: Array = []
-	c2.nudge_fn = func(id: Variant, _v: DotSpawnVerdict) -> void: nudged.append(id)
+	c2.nudge_fn = func(id: Variant, _v: GSSpawnVerdict) -> void: nudged.append(id)
 	var dt := 1.0 / RATE
 	var elapsed := 0.0
 	while elapsed < 30.0:

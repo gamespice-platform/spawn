@@ -10,17 +10,17 @@ Decides where players, NPCs and props enter the world, and why that place rather
 ## Use
 
 ```gdscript
-var spawns := DotSpawnDirector.new()
-spawns.rules = DotSpawnRules.team_deathmatch()
+var spawns := GSSpawnDirector.new()
+spawns.rules = GSSpawnRules.team_deathmatch()
 spawns.tick_rate = 64
 spawns.enemies_fn = func(team): return positions_of_enemies_of(team)
 spawns.can_see_fn = func(a, b): return physics.query().line_of_sight_3d(world, a, b)
 add_child(spawns)
 spawns.refresh()                       # collect the markers in the level
 
-var res := spawns.choose(DotSpawnRequest.make("ada", &"blue", &"rifleman", tick))
+var res := spawns.choose(GSSpawnRequest.make("ada", &"blue", &"rifleman", tick))
 if res.ok:
-    var choice: DotSpawnChoice = res.value
+    var choice: GSSpawnChoice = res.value
     player.global_transform = choice.transform
     if choice.fell_back:
         push_warning("this map's spawn conditions can never all be satisfied")
@@ -34,7 +34,7 @@ for key in spawns.advance(tick):
 
 ## Areas
 
-`DotSpawnArea3D` and `DotSpawnArea2D` hold as many spawns as they have room for, and pick the point inside per request. A single point cannot start a round: sixteen capsules at one coordinate get launched across the map.
+`GSSpawnArea3D` and `GSSpawnArea2D` hold as many spawns as they have room for, and pick the point inside per request. A single point cannot start a round: sixteen capsules at one coordinate get launched across the map.
 
 An area can also be a safe zone. Your damage code asks, and this addon never enforces it:
 
@@ -56,7 +56,7 @@ if area.protects_key(victim_key, attacker_team):
 
 ## Conditions
 
-`DotSpawnCondition.allows()` is a veto and `bonus()` is a preference. Keep them apart: a veto written as a big penalty still picks the forbidden site when it is the only one left.
+`GSSpawnCondition.allows()` is a veto and `bonus()` is a preference. Keep them apart: a veto written as a big penalty still picks the forbidden site when it is the only one left.
 
 | Shipped condition | Vetoes |
 | --- | --- |
@@ -65,7 +65,7 @@ if area.protects_key(victim_key, attacker_team):
 | `NotOccupied` | Sites with someone on them. |
 | `MetaEquals` | Sites whose metadata does not match. |
 
-Subclass `DotSpawnCondition` for your own.
+Subclass `GSSpawnCondition` for your own.
 
 When nothing passes, something still spawns (`fall_back_when_nothing_passes`, default on), because a black screen looks like a crash. The choice comes back with `fell_back` set, a reason, a log warning and a signal, since a map whose conditions can never be met is a content bug.
 
@@ -77,11 +77,11 @@ Randomness is seeded per request from `(seed, tick, key)`, so a server and a cli
 
 ## Settings
 
-`DotSpawnRules` is a `DotConfig`: exported defaults, then a JSON file, then environment, then command line.
+`GSSpawnRules` is a `GSConfig`: exported defaults, then a JSON file, then environment, then command line.
 
 ## Match
 
-GameSpice Match has its own simpler `DotSpawnPoint` and `DotSpawnSelector` (one point per player, dependency-free), which stay. Use GameSpice Spawn when you need areas, conditions, waves, protection or 2D.
+GameSpice Match has its own simpler `GSSpawnPoint` and `GSSpawnSelector` (one point per player, dependency-free), which stay. Use GameSpice Spawn when you need areas, conditions, waves, protection or 2D.
 
 ## Testing
 

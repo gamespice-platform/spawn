@@ -1,17 +1,17 @@
-class_name DotSpawnScoring
+class_name GSSpawnScoring
 extends RefCounted
-## The pure half of site choice: scoring, tie-breaking and the scatter draw. [DotSpawnDirector] keeps the state and passes it in.
+## The pure half of site choice: scoring, tie-breaking and the scatter draw. [GSSpawnDirector] keeps the state and passes it in.
 
 ## Random over every site by weight, damped near recent picks and living enemies.
 ##
 ## Priority is ignored on purpose: a "preferred" start is what put every bot in the default area. Sight is tested by rejection on the drawn site, so the cost is a few rays, not sites times enemies.
 static func pick_scatter(
-	rules: DotSpawnRules,
+	rules: GSSpawnRules,
 	recent: Array[Vector3],
-	pool: Array[DotSpawnSite],
+	pool: Array[GSSpawnSite],
 	context: Dictionary,
 	rng: RandomNumberGenerator
-) -> DotSpawnSite:
+) -> GSSpawnSite:
 	var enemies: Array = context.get("enemies", [])
 	var weights := PackedFloat64Array()
 	var total := 0.0
@@ -39,7 +39,7 @@ static func pick_scatter(
 
 	var can_see: Variant = context.get("can_see", null)
 	var checks: bool = can_see is Callable and (can_see as Callable).is_valid() and not enemies.is_empty() and rules.scatter_seen_factor < 1.0
-	var drawn: DotSpawnSite = null
+	var drawn: GSSpawnSite = null
 
 	for attempt in 8:
 		var roll := rng.randf() * total
@@ -63,7 +63,7 @@ static func pick_scatter(
 	return drawn
 
 
-static func scatter_damping(rules: DotSpawnRules, recent: Array[Vector3], at: Vector3, enemies: Array) -> float:
+static func scatter_damping(rules: GSSpawnRules, recent: Array[Vector3], at: Vector3, enemies: Array) -> float:
 	return _damping(rules, _packed(recent), at, _packed(enemies))
 
 
@@ -90,7 +90,7 @@ static func _nearest_packed(at: Vector3, points: PackedVector3Array) -> float:
 	return sqrt(nearest_sq)
 
 
-static func _damping(rules: DotSpawnRules, recent: PackedVector3Array, at: Vector3, enemies: PackedVector3Array) -> float:
+static func _damping(rules: GSSpawnRules, recent: PackedVector3Array, at: Vector3, enemies: PackedVector3Array) -> float:
 	var f := 1.0
 	var e_near := -1.0
 	var r_near := -1.0
@@ -144,8 +144,8 @@ static func seen_by_any(at: Vector3, enemies: Array, can_see: Callable) -> bool:
 ## Highest scorer, with ties broken by priority and then by id.
 ##
 ## Deterministic ties: scene-tree order differs between a client and a server that loaded the level differently.
-static func best(pool: Array[DotSpawnSite], scorer: Callable) -> DotSpawnSite:
-	var best: DotSpawnSite = null
+static func best(pool: Array[GSSpawnSite], scorer: Callable) -> GSSpawnSite:
+	var best: GSSpawnSite = null
 	var best_score := -INF
 
 	for site in pool:
@@ -165,7 +165,7 @@ static func best(pool: Array[DotSpawnSite], scorer: Callable) -> DotSpawnSite:
 	return best
 
 
-static func score(rules: DotSpawnRules, conditions: Array[DotSpawnCondition], site: DotSpawnSite, context: Dictionary) -> float:
+static func score(rules: GSSpawnRules, conditions: Array[GSSpawnCondition], site: GSSpawnSite, context: Dictionary) -> float:
 	var score := float(site.priority) * rules.priority_weight
 
 	var enemies: Array = context.get("enemies", [])
@@ -205,7 +205,7 @@ static func score(rules: DotSpawnRules, conditions: Array[DotSpawnCondition], si
 ## Distance to the nearest of a set of points, or INF when the set is empty.
 ##
 ## INF, not zero: an empty list means "no information", and zero would make every site equally terrible.
-static func nearest_distance(site: DotSpawnSite, points: Array) -> float:
+static func nearest_distance(site: GSSpawnSite, points: Array) -> float:
 	var nearest := INF
 
 	for p: Variant in points:

@@ -1,11 +1,11 @@
-class_name DotSpawnWatch
+class_name GSSpawnWatch
 extends RefCounted
 
 ## Finds movers that are stuck, off the navigation, fallen out, cut off or lost; decides nothing.
 
 const SPOTS_KEPT := 64
 
-var rules: DotSpawnCullRules = DotSpawnCullRules.new()
+var rules: GSSpawnCullRules = GSSpawnCullRules.new()
 ## (position: Vector3) -> float, metres from the navigation. Unset skips the off-nav verdict.
 var nav_distance_fn: Callable = Callable()
 ## (position: Vector3) -> bool, whether any living player has a path to it. Unset skips unreachable.
@@ -42,7 +42,7 @@ class Track extends RefCounted:
 	var stuck_run: float = 0.0
 
 
-func _init(p_rules: DotSpawnCullRules = null) -> void:
+func _init(p_rules: GSSpawnCullRules = null) -> void:
 	if p_rules != null:
 		rules = p_rules
 
@@ -89,8 +89,8 @@ func tracked() -> int:
 
 
 ## Advance the clock and sample this tick's share of movers; returns the verdicts found.
-func advance(delta: float) -> Array[DotSpawnVerdict]:
-	var out: Array[DotSpawnVerdict] = []
+func advance(delta: float) -> Array[GSSpawnVerdict]:
+	var out: Array[GSSpawnVerdict] = []
 	now += delta
 
 	if not rules.enabled or _order.is_empty():
@@ -127,14 +127,14 @@ func advance(delta: float) -> Array[DotSpawnVerdict]:
 	return out
 
 
-func _sample(id: Variant, tr: Track, out: Array[DotSpawnVerdict]) -> void:
+func _sample(id: Variant, tr: Track, out: Array[GSSpawnVerdict]) -> void:
 	var dt := now - tr.last_sample
 	tr.last_sample = now
 	samples += 1
 	var pos := tr.position
 
 	if not pos.is_finite() or pos.y < rules.kill_y:
-		out.append(_verdict(id, tr, DotSpawnVerdict.Category.FELL_OUT, 0.0))
+		out.append(_verdict(id, tr, GSSpawnVerdict.Category.FELL_OUT, 0.0))
 		return
 
 	var k: Dictionary = _kinds.get(tr.kind, {})
@@ -158,7 +158,7 @@ func _sample(id: Variant, tr: Track, out: Array[DotSpawnVerdict]) -> void:
 			k["longest"] = maxf(k["longest"], held)
 			_ever_stuck[id] = true
 			_note_spot(pos)
-			out.append(_verdict(id, tr, DotSpawnVerdict.Category.STUCK, held))
+			out.append(_verdict(id, tr, GSSpawnVerdict.Category.STUCK, held))
 
 	if now - tr.last_probe >= rules.probe_sec:
 		tr.last_probe = now
@@ -172,10 +172,10 @@ func _sample(id: Variant, tr: Track, out: Array[DotSpawnVerdict]) -> void:
 			tr.unreachable_since = _since(tr.unreachable_since, blocked)
 
 	if tr.off_nav_since >= 0.0 and now - tr.off_nav_since >= rules.off_nav_sec:
-		out.append(_verdict(id, tr, DotSpawnVerdict.Category.OFF_NAV, now - tr.off_nav_since))
+		out.append(_verdict(id, tr, GSSpawnVerdict.Category.OFF_NAV, now - tr.off_nav_since))
 
 	if tr.unreachable_since >= 0.0 and now - tr.unreachable_since >= rules.unreachable_sec:
-		out.append(_verdict(id, tr, DotSpawnVerdict.Category.UNREACHABLE, now - tr.unreachable_since))
+		out.append(_verdict(id, tr, GSSpawnVerdict.Category.UNREACHABLE, now - tr.unreachable_since))
 
 	var lost := false
 
@@ -190,7 +190,7 @@ func _sample(id: Variant, tr: Track, out: Array[DotSpawnVerdict]) -> void:
 	tr.far_since = _since(tr.far_since, lost)
 
 	if tr.far_since >= 0.0 and now - tr.far_since >= rules.far_sec:
-		out.append(_verdict(id, tr, DotSpawnVerdict.Category.FAR, now - tr.far_since))
+		out.append(_verdict(id, tr, GSSpawnVerdict.Category.FAR, now - tr.far_since))
 
 
 func _since(since: float, bad: bool) -> float:
@@ -200,8 +200,8 @@ func _since(since: float, bad: bool) -> float:
 	return now if since < 0.0 else since
 
 
-func _verdict(id: Variant, tr: Track, category: int, seconds: float) -> DotSpawnVerdict:
-	var v := DotSpawnVerdict.new()
+func _verdict(id: Variant, tr: Track, category: int, seconds: float) -> GSSpawnVerdict:
+	var v := GSSpawnVerdict.new()
 	v.id = id
 	v.kind = tr.kind
 	v.category = category
@@ -239,7 +239,7 @@ func worst_spots(limit: int = 5) -> Array:
 
 
 func describe() -> String:
-	return "DotSpawnWatch(%s, %d tracked, %d samples, %d budget trips, last %d us)" % [
+	return "GSSpawnWatch(%s, %d tracked, %d samples, %d budget trips, last %d us)" % [
 		"on" if rules.enabled else "off", _tracks.size(), samples, budget_trips, last_advance_usec]
 
 

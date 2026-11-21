@@ -1,4 +1,4 @@
-class_name DotSpawnVerdict
+class_name GSSpawnVerdict
 extends RefCounted
 
 ## What the watch found wrong with one mover at one sample.

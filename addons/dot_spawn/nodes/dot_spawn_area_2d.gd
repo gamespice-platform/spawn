@@ -1,10 +1,10 @@
 @tool
-class_name DotSpawnArea2D
+class_name GSSpawnArea2D
 extends Area2D
 
 ## A 2D volume things spawn inside, and — optionally — are safe inside.
 ##
-## The 2D half of [DotSpawnArea3D]. Same contract, same [method protects_key] interface
+## The 2D half of [GSSpawnArea3D]. Same contract, same [method protects_key] interface
 ## for a damage system, and a separate class for the same reason the markers are: an
 ## [Area2D] and an [Area3D] share no base below [Node], and a node that branched on
 ## which one it was would branch wrongly in the scene where it mattered.
@@ -62,8 +62,8 @@ func _ready() -> void:
 	body_exited.connect(_on_body_exited)
 
 
-func to_site() -> DotSpawnSite:
-	var site := DotSpawnSite.new()
+func to_site() -> GSSpawnSite:
+	var site := GSSpawnSite.new()
 	site.id = site_id
 	site.position = Vector3(global_position.x, global_position.y, 0.0)
 	site.yaw = global_rotation

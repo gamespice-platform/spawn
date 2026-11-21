@@ -1,5 +1,5 @@
 @tool
-class_name DotSpawnArea3D
+class_name GSSpawnArea3D
 extends Area3D
 
 ## A volume things spawn inside, and — optionally — are safe inside.
@@ -106,13 +106,13 @@ func _ready() -> void:
 	# The editor says this in the scene tree; a dedicated server never opens one, so
 	# the same configuration warning is said once more where an operator will see it.
 	if safe_zone and team == &"" and safe_for_owning_team_only:
-		DotLog.warn(CHANNEL, "a team-only safe zone has no team, so it protects nobody", {
+		GSLog.warn(CHANNEL, "a team-only safe zone has no team, so it protects nobody", {
 			"area": String(site_id) if site_id != &"" else String(name),
 		})
 
 
-func to_site() -> DotSpawnSite:
-	var site := DotSpawnSite.new()
+func to_site() -> GSSpawnSite:
+	var site := GSSpawnSite.new()
 	site.id = site_id
 	site.position = global_position
 	site.yaw = global_basis.get_euler().y
@@ -140,7 +140,7 @@ func measured_extents() -> Vector3:
 		var box := shape_node.shape as BoxShape3D
 
 		if box != null:
-			# Half, because Godot's BoxShape3D.size is the full size and DotSpawnSite's
+			# Half, because Godot's BoxShape3D.size is the full size and GSSpawnSite's
 			# extents are half-extents. Getting this wrong doubles the area silently,
 			# and half the spawns then land outside the volume that was drawn.
 			return (box.size * 0.5) * shape_node.scale
@@ -252,7 +252,7 @@ func _on_body_entered(body: Node3D) -> void:
 		# because it is wiring a game forgot, and it looks exactly like working.
 		if safe_zone and not _warned_no_key:
 			_warned_no_key = true
-			DotLog.warn(CHANNEL, "a safe zone has no key_of, so nothing inside it is protected", {
+			GSLog.warn(CHANNEL, "a safe zone has no key_of, so nothing inside it is protected", {
 				"area": String(site_id) if site_id != &"" else String(name),
 			})
 		return

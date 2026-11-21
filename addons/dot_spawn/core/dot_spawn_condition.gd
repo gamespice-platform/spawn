@@ -1,5 +1,5 @@
 @tool
-class_name DotSpawnCondition
+class_name GSSpawnCondition
 extends Resource
 
 ## A rule a site must satisfy, or a reason to prefer one site over another.
@@ -14,7 +14,7 @@ extends Resource
 ## Subclass this for anything a game needs that is not here. The four shipped subclasses
 ## are the four that every project writes.
 
-## Named in logs and in [method DotSpawnDirector.describe_lines].
+## Named in logs and in [method GSSpawnDirector.describe_lines].
 @export var id: StringName = &""
 
 ## Whether this condition is consulted at all.
@@ -23,16 +23,16 @@ extends Resource
 
 ## Whether [param site] is a legal choice for this request.
 ##
-## [param context] is whatever [DotSpawnDirector] was given: [code]team[/code],
+## [param context] is whatever [GSSpawnDirector] was given: [code]team[/code],
 ## [code]class[/code], [code]key[/code], [code]tick[/code], [code]enemies[/code] (an
 ## [Array] of [Vector3]), [code]friends[/code], [code]can_see[/code] (a [Callable]), and
 ## anything the game added.
-func allows(_site: DotSpawnSite, _context: Dictionary) -> bool:
+func allows(_site: GSSpawnSite, _context: Dictionary) -> bool:
 	return true
 
 
 ## How much better or worse this site is. Added to the score; zero is neutral.
-func bonus(_site: DotSpawnSite, _context: Dictionary) -> float:
+func bonus(_site: GSSpawnSite, _context: Dictionary) -> float:
 	return 0.0
 
 

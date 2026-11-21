@@ -6,7 +6,7 @@ extends "res://examples/selftest/flag_tests.gd"
 func _test_markers() -> void:
 	_section("markers")
 
-	var m := DotSpawnMarker3D.new()
+	var m := GSSpawnMarker3D.new()
 	m.site_id = &"red_start"
 	m.team = &"red"
 	m.site_priority = 3
@@ -28,7 +28,7 @@ func _test_markers() -> void:
 		+ "hand out where the lift was two minutes ago"
 	)
 
-	var m2 := DotSpawnMarker2D.new()
+	var m2 := GSSpawnMarker2D.new()
 	m2.site_id = &"flat"
 	m2.position = Vector2(11, 22)
 	add_child(m2)
@@ -36,7 +36,7 @@ func _test_markers() -> void:
 	_check(site2.is_2d, "a 2D marker produces a 2D site")
 	_check(site2.position_2d() == Vector2(11, 22), "at its pixel position")
 
-	var blank := DotSpawnMarker3D.new()
+	var blank := GSSpawnMarker3D.new()
 	blank.site_id = &""
 	add_child(blank)
 	_check(
@@ -49,17 +49,17 @@ func _test_markers() -> void:
 	var holder := Node3D.new()
 	add_child(holder)
 	for i in range(4):
-		var mk := DotSpawnMarker3D.new()
+		var mk := GSSpawnMarker3D.new()
 		mk.site_id = StringName("p%d" % i)
 		mk.position = Vector3(float(i), 0, 0)
 		holder.add_child(mk)
 
-	var d := _director(DotSpawnRules.new())
-	d.sites_ref = DotNodeRef.of_path(holder.get_path())
+	var d := _director(GSSpawnRules.new())
+	d.sites_ref = GSNodeRef.of_path(holder.get_path())
 	d.refresh(false)
 	_check(d.sites().size() == 4, "a director collects the markers under its root")
 
-	var code_site := DotSpawnSite.point(&"runtime", Vector3.ONE)
+	var code_site := GSSpawnSite.point(&"runtime", Vector3.ONE)
 	d.add_site(code_site)
 	_check(d.sites().size() == 5, "and takes sites built in code")
 	_check(d.remove_site(&"runtime") == 1, "which can be removed again")
@@ -86,7 +86,7 @@ func _test_markers() -> void:
 func _test_areas() -> void:
 	_section("areas")
 
-	var area := DotSpawnArea3D.new()
+	var area := GSSpawnArea3D.new()
 	area.site_id = &"red_base"
 	area.team = &"red"
 	area.safe_zone = true
@@ -154,7 +154,7 @@ func _test_areas() -> void:
 	flat.free()
 
 
-func _areas_sampling(area: DotSpawnArea3D) -> void:
+func _areas_sampling(area: GSSpawnArea3D) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	var placed := area.sample(rng)
@@ -172,8 +172,8 @@ func _areas_sampling(area: DotSpawnArea3D) -> void:
 	)
 
 
-func _areas_flat() -> DotSpawnArea2D:
-	var flat := DotSpawnArea2D.new()
+func _areas_flat() -> GSSpawnArea2D:
+	var flat := GSSpawnArea2D.new()
 	flat.site_id = &"lobby"
 	flat.fallback_extents = Vector2(32, 32)
 	add_child(flat)
@@ -186,9 +186,9 @@ func _areas_flat() -> DotSpawnArea2D:
 	return flat
 
 
-func _areas_describe(area: DotSpawnArea3D) -> void:
+func _areas_describe(area: GSSpawnArea3D) -> void:
 	_check(area.describe_lines().size() >= 1, "an area describes itself")
-	var unshaped := DotSpawnArea3D.new()
+	var unshaped := GSSpawnArea3D.new()
 	_check(
 		not unshaped._get_configuration_warnings().is_empty(),
 		"and warns in the editor when it has no box to measure"

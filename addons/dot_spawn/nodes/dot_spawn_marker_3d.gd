@@ -1,5 +1,5 @@
 @tool
-class_name DotSpawnMarker3D
+class_name GSSpawnMarker3D
 extends Marker3D
 
 ## A place in a 3D level where something enters the world.
@@ -9,7 +9,7 @@ extends Marker3D
 ## point that is invisible in code and obvious in a viewport, and the half that gets
 ## rotated ninety degrees by accident.
 ##
-## The node's only job is to produce a [DotSpawnSite]. Everything that decides anything
+## The node's only job is to produce a [GSSpawnSite]. Everything that decides anything
 ## works on those, and nothing on this.
 
 ## What this site is called. A deathmatch map's forty points are all [code]&"any"[/code].
@@ -23,7 +23,7 @@ extends Marker3D
 
 ## Higher wins a tie. A map's preferred start.
 ##
-## Named to match [DotSpawnArea3D], where it cannot be called [code]priority[/code]
+## Named to match [GSSpawnArea3D], where it cannot be called [code]priority[/code]
 ## because [Area3D] already has one.
 @export var site_priority: int = 0
 
@@ -53,8 +53,8 @@ extends Marker3D
 ## a moving platform or a level script would otherwise hand out the place it used to be,
 ## and the symptom — players spawning where a lift was two minutes ago — reads as a
 ## netcode bug rather than as a stale cache.
-func to_site() -> DotSpawnSite:
-	var site := DotSpawnSite.new()
+func to_site() -> GSSpawnSite:
+	var site := GSSpawnSite.new()
 	site.id = site_id
 	site.position = global_position
 	site.yaw = global_basis.get_euler().y

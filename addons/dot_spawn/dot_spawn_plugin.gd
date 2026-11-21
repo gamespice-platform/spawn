@@ -9,11 +9,11 @@ extends EditorPlugin
 const _ICON := "res://addons/dot_spawn/icon_placeholder.svg"
 
 const _TYPES := [
-	["DotSpawnDirector", "Node", "res://addons/dot_spawn/runtime/dot_spawn_director.gd"],
-	["DotSpawnMarker3D", "Marker3D", "res://addons/dot_spawn/nodes/dot_spawn_marker_3d.gd"],
-	["DotSpawnMarker2D", "Marker2D", "res://addons/dot_spawn/nodes/dot_spawn_marker_2d.gd"],
-	["DotSpawnArea3D", "Area3D", "res://addons/dot_spawn/nodes/dot_spawn_area_3d.gd"],
-	["DotSpawnArea2D", "Area2D", "res://addons/dot_spawn/nodes/dot_spawn_area_2d.gd"],
+	["GSSpawnDirector", "Node", "res://addons/dot_spawn/runtime/dot_spawn_director.gd"],
+	["GSSpawnMarker3D", "Marker3D", "res://addons/dot_spawn/nodes/dot_spawn_marker_3d.gd"],
+	["GSSpawnMarker2D", "Marker2D", "res://addons/dot_spawn/nodes/dot_spawn_marker_2d.gd"],
+	["GSSpawnArea3D", "Area3D", "res://addons/dot_spawn/nodes/dot_spawn_area_3d.gd"],
+	["GSSpawnArea2D", "Area2D", "res://addons/dot_spawn/nodes/dot_spawn_area_2d.gd"],
 ]
 
 

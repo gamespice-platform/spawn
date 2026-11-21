@@ -1,4 +1,4 @@
-class_name DotEntitySpawner
+class_name GSEntitySpawner
 extends RefCounted
 
 ## Spawns anything a factory Callable can make, on a timer, from a profile; the NPC spawners' general sibling.
@@ -12,7 +12,7 @@ signal pool_empty
 
 const KIND := "spawner"
 const ADDON := "dot_spawn"
-## The folder before the underscore rename; read through [DotCfgLegacy] until its removal date.
+## The folder before the underscore rename; read through [GSCfgLegacy] until its removal date.
 const LEGACY_ADDON := "dot-spawn"
 const RESPAWN_PICKUP := "on_pickup"
 const RESPAWN_TIMER := "on_timer"
@@ -49,11 +49,11 @@ var phases := PackedStringArray()
 var team_limit := 0
 ## At most this many living entities per distinct pool-entry `class` (0 is no limit).
 var class_limit := 0
-## Optional DotSpawnWatch or DotSpawnCull: anything with report(id, pos, kind, has_goal) / forget(id).
+## Optional GSSpawnWatch or GSSpawnCull: anything with report(id, pos, kind, has_goal) / forget(id).
 var watch: Object = null
 var watch_kind: StringName = &"entity"
 
-var _rng: DotRandomStream
+var _rng: GSRandomStream
 var _seed := 0
 var _clock := 0.0
 var _phase := ""
@@ -77,7 +77,7 @@ func _init(p_id: StringName = &"", p_seed: int = 0) -> void:
 ## Restarts the random stream; the same seed and calls give the same entities and positions.
 func set_seed(p_seed: int) -> void:
 	_seed = p_seed
-	_rng = DotRandomStream.new(p_seed, StringName("entity_spawner/%s" % id))
+	_rng = GSRandomStream.new(p_seed, StringName("entity_spawner/%s" % id))
 
 
 ## Sets the single thing to spawn, replacing the pool.
@@ -190,7 +190,7 @@ func reset() -> void:
 
 
 func describe() -> String:
-	return "DotEntitySpawner %s: %s, %d/%d alive, %d spawned, %s, clock %.1f, pool [%s]" % [
+	return "GSEntitySpawner %s: %s, %d/%d alive, %d spawned, %s, clock %.1f, pool [%s]" % [
 		id, "active" if is_active() else "idle", _alive.size(), max_alive, _spawn_total,
 		respawn, _clock, ", ".join(_pool_names())]
 
@@ -202,9 +202,9 @@ func describe_lines() -> PackedStringArray:
 	return out
 
 
-## The profile schema for [DotProfileSet]; kind `spawner`.
+## The profile schema for [GSProfileSet]; kind `spawner`.
 static func schema() -> Array:
-	var f := DotProfileSet.field
+	var f := GSProfileSet.field
 	return [
 		f.call("what", "string", ""),
 		f.call("pool", "list", []),
@@ -231,12 +231,12 @@ static func profile_schemas() -> Dictionary:
 
 
 ## A profile set for kind `spawner` in [param game].
-static func profile_set(game: String) -> DotProfileSet:
-	return DotProfileSet.create(ADDON, game, KIND, schema())
+static func profile_set(game: String) -> GSProfileSet:
+	return GSProfileSet.create(ADDON, game, KIND, schema())
 
 
 ## Builds a spawner from profile [param profile_id]; fails on a pool that cannot spawn anything.
-static func from_profile(set: DotProfileSet, profile_id: String, p_factory: Callable) -> DotResult:
+static func from_profile(set: GSProfileSet, profile_id: String, p_factory: Callable) -> GSResult:
 	var res := set.load_profile(profile_id)
 	if not res.ok:
 		var old := _legacy_set(set)
@@ -248,43 +248,43 @@ static func from_profile(set: DotProfileSet, profile_id: String, p_factory: Call
 
 
 ## The same set over the pre-rename folder `cfg/addons/dot-spawn/`; warns once per file found there.
-static func _legacy_set(set: DotProfileSet) -> DotProfileSet:
-	var old := DotProfileSet.create(LEGACY_ADDON, set.game, KIND, schema())
+static func _legacy_set(set: GSProfileSet) -> GSProfileSet:
+	var old := GSProfileSet.create(LEGACY_ADDON, set.game, KIND, schema())
 	old.roots = set.roots
 	old.cmdline = set.cmdline
 	old.user_root = set.user_root
 	old.user_tier_enabled = set.user_tier_enabled
-	for root in (set.roots if not set.roots.is_empty() else DotProfileSet.default_roots()):
+	for root in (set.roots if not set.roots.is_empty() else GSProfileSet.default_roots()):
 		var base := root.path_join("addons")
 		for id in old.list_ids():
-			DotCfgLegacy.find(base.path_join(LEGACY_ADDON).path_join(KIND).path_join(id + ".yml"),
+			GSCfgLegacy.find(base.path_join(LEGACY_ADDON).path_join(KIND).path_join(id + ".yml"),
 				base.path_join(ADDON).path_join(KIND).path_join(id + ".yml"))
 	return old
 
 
 ## Builds one from any getter `func(key) -> Variant` (a loaded profile's get_value, or a test's dictionary).
-static func from_values(p_id: String, getter: Callable, p_factory: Callable) -> DotResult:
-	var s := DotEntitySpawner.new(StringName(p_id), int(getter.call("seed")))
+static func from_values(p_id: String, getter: Callable, p_factory: Callable) -> GSResult:
+	var s := GSEntitySpawner.new(StringName(p_id), int(getter.call("seed")))
 	s.factory = p_factory
 	var what := str(getter.call("what"))
 	var raw: Array = getter.call("pool")
 	if what != "" and not raw.is_empty():
-		return DotResult.fail(DotError.CODE_INVALID, "spawner '%s': set either what or pool, not both" % p_id)
+		return GSResult.fail(GSError.CODE_INVALID, "spawner '%s': set either what or pool, not both" % p_id)
 	if what != "":
 		s.set_what(StringName(what))
 	for e in raw:
 		if not (e is Dictionary) or str(e.get("id", "")) == "":
-			return DotResult.fail(DotError.CODE_INVALID, "spawner '%s': every pool entry needs an id" % p_id)
+			return GSResult.fail(GSError.CODE_INVALID, "spawner '%s': every pool entry needs an id" % p_id)
 		var w := float(e.get("weight", 1.0))
 		if is_nan(w) or is_inf(w) or w < 0.0:
-			return DotResult.fail(DotError.CODE_INVALID, "spawner '%s': bad weight for '%s'" % [p_id, e["id"]])
+			return GSResult.fail(GSError.CODE_INVALID, "spawner '%s': bad weight for '%s'" % [p_id, e["id"]])
 		s.add_entry(StringName(str(e["id"])), w, int(e.get("stock", -1)),
 			{"team": str(e.get("team", "")), "class": str(e.get("class", "")), "max_alive": int(e.get("max_alive", 0))})
 	var total := 0.0
 	for e in s.pool:
 		total += e["weight"]
 	if s.pool.is_empty() or total <= 0.0:
-		return DotResult.fail(DotError.CODE_INVALID, "spawner '%s': needs what, or a pool with a positive weight" % p_id)
+		return GSResult.fail(GSError.CODE_INVALID, "spawner '%s': needs what, or a pool with a positive weight" % p_id)
 	s.count = int(getter.call("count"))
 	s.max_alive = int(getter.call("max_alive"))
 	if s.max_alive <= 0:
@@ -300,7 +300,7 @@ static func from_values(p_id: String, getter: Callable, p_factory: Callable) -> 
 	s.phases = PackedStringArray(getter.call("phases"))
 	s.team_limit = int(getter.call("team_limit"))
 	s.class_limit = int(getter.call("class_limit"))
-	return DotResult.success(s)
+	return GSResult.success(s)
 
 
 func _try_spawn(made: Array) -> void:

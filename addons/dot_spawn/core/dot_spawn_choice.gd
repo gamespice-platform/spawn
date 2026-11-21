@@ -1,4 +1,4 @@
-class_name DotSpawnChoice
+class_name GSSpawnChoice
 extends RefCounted
 
 ## Where something goes, which site that was, and whether the rules were satisfied.
@@ -10,7 +10,7 @@ extends RefCounted
 ## anybody who asked directly.
 
 ## The site that was picked. Never null in a successful result.
-var site: DotSpawnSite = null
+var site: GSSpawnSite = null
 
 ## Where to put the thing. Already sampled inside the site's area, if it has one.
 var transform: Transform3D = Transform3D.IDENTITY
@@ -56,4 +56,4 @@ func describe() -> String:
 
 
 func _to_string() -> String:
-	return "DotSpawnChoice(%s)" % describe()
+	return "GSSpawnChoice(%s)" % describe()

@@ -1,10 +1,10 @@
-class_name DotSpawnSite
+class_name GSSpawnSite
 extends RefCounted
 
 ## One candidate place to enter the world, as a value.
 ##
 ## [b]Everything in this addon that decides anything works on these, and nothing on a
-## scene node.[/b] A [DotSpawnMarker3D] produces one, a [DotSpawnArea2D] produces one, a
+## scene node.[/b] A [GSSpawnMarker3D] produces one, a [GSSpawnArea2D] produces one, a
 ## level generator produces one out of thin air — and from there the filtering, the
 ## scoring and the picking are pure functions over an array of values, which is what
 ## lets the whole selection half be tested with no world at all.
@@ -55,7 +55,7 @@ var is_2d: bool = false
 ## Ticks after a use during which this site scores badly. -1 uses the rules' default.
 var cooldown_ticks: int = -1
 
-## Whether standing here is safe. See [DotSpawnProtection].
+## Whether standing here is safe. See [GSSpawnProtection].
 var protects: bool = false
 
 ## Anything the game wants to carry along — a room id, a lane, an objective.
@@ -81,8 +81,8 @@ static func point(
 	p_position: Vector3,
 	p_yaw: float = 0.0,
 	p_team: StringName = &""
-) -> DotSpawnSite:
-	var s := DotSpawnSite.new()
+) -> GSSpawnSite:
+	var s := GSSpawnSite.new()
 	s.id = p_id
 	s.position = p_position
 	s.yaw = p_yaw
@@ -95,7 +95,7 @@ static func area(
 	p_position: Vector3,
 	p_extents: Vector3,
 	p_team: StringName = &""
-) -> DotSpawnSite:
+) -> GSSpawnSite:
 	var s := point(p_id, p_position, 0.0, p_team)
 	s.extents = p_extents
 	return s
@@ -164,8 +164,8 @@ func describe() -> String:
 	]
 
 
-func duplicate_site() -> DotSpawnSite:
-	var s := DotSpawnSite.new()
+func duplicate_site() -> GSSpawnSite:
+	var s := GSSpawnSite.new()
 	s.id = id
 	s.position = position
 	s.yaw = yaw
@@ -187,4 +187,4 @@ func duplicate_site() -> DotSpawnSite:
 
 
 func _to_string() -> String:
-	return "DotSpawnSite(%s)" % describe()
+	return "GSSpawnSite(%s)" % describe()

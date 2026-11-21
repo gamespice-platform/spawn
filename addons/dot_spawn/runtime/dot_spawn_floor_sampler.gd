@@ -1,4 +1,4 @@
-class_name DotSpawnFloorSampler
+class_name GSSpawnFloorSampler
 extends RefCounted
 
 ## Spawn candidates for a map that has no spawn entities: floor points cast by ray, spread over the whole level.
@@ -8,9 +8,9 @@ extends RefCounted
 const GENERATED := &"generated"
 
 
-## `ray_fn(from: Vector3, to: Vector3) -> Dictionary` returns `{position, normal}` on a hit and `{}` on a miss. Returns [DotSpawnSite]s (id `gen_N`, source generated) chosen by farthest-point sampling, so every region of [param bounds] gets some.
-static func sample(bounds: AABB, count: int, clearance: float, ray_fn: Callable, head_room: float = 1.9) -> Array[DotSpawnSite]:
-	var out: Array[DotSpawnSite] = []
+## `ray_fn(from: Vector3, to: Vector3) -> Dictionary` returns `{position, normal}` on a hit and `{}` on a miss. Returns [GSSpawnSite]s (id `gen_N`, source generated) chosen by farthest-point sampling, so every region of [param bounds] gets some.
+static func sample(bounds: AABB, count: int, clearance: float, ray_fn: Callable, head_room: float = 1.9) -> Array[GSSpawnSite]:
+	var out: Array[GSSpawnSite] = []
 
 	if count <= 0 or not ray_fn.is_valid() or bounds.size.x <= 0.0 or bounds.size.z <= 0.0:
 		return out
@@ -39,7 +39,7 @@ static func sample(bounds: AABB, count: int, clearance: float, ray_fn: Callable,
 
 	while out.size() < mini(count, cands.size()):
 		var at: Vector3 = cands[pick]
-		var site := DotSpawnSite.point(StringName("gen_%d" % out.size()), at, 0.0)
+		var site := GSSpawnSite.point(StringName("gen_%d" % out.size()), at, 0.0)
 		site.source = GENERATED
 		out.append(site)
 		var far := -1.0
@@ -114,7 +114,7 @@ static func _is_clear(at: Vector3, clearance: float, head_room: float, ray_fn: C
 
 
 ## Turns each site towards the far side of the map, so a spawner does not face a wall.
-static func _face_open(sites: Array[DotSpawnSite], cands: Array[Vector3]) -> void:
+static func _face_open(sites: Array[GSSpawnSite], cands: Array[Vector3]) -> void:
 	for s in sites:
 		var far := 0.0
 		var yaw := 0.0

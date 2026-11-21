@@ -1,4 +1,4 @@
-class_name DotSpawnFlags
+class_name GSSpawnFlags
 extends RefCounted
 
 ## Flag stands among a map's spawn sites: which sites are flags, which team each belongs to, and a fallback base per team for a map that has none.
@@ -7,19 +7,19 @@ extends RefCounted
 
 
 ## Whether the site is a flag stand.
-static func is_flag(site: DotSpawnSite) -> bool:
-	return str(site.meta.get(DotSpawnPointDef.META_KIND, "")) == String(DotSpawnPointDef.KIND_FLAG)
+static func is_flag(site: GSSpawnSite) -> bool:
+	return str(site.meta.get(GSSpawnPointDef.META_KIND, "")) == String(GSSpawnPointDef.KIND_FLAG)
 
 
 ## The site's team as a number, or 0 when it has none.
-static func team_id(site: DotSpawnSite) -> int:
+static func team_id(site: GSSpawnSite) -> int:
 	var t := String(site.team)
 	return int(t) if t.is_valid_int() else 0
 
 
 ## Every enabled flag stand.
-static func flag_sites(sites: Array[DotSpawnSite]) -> Array[DotSpawnSite]:
-	var out: Array[DotSpawnSite] = []
+static func flag_sites(sites: Array[GSSpawnSite]) -> Array[GSSpawnSite]:
+	var out: Array[GSSpawnSite] = []
 
 	for s in sites:
 		if s.enabled and is_flag(s) and team_id(s) > 0:
@@ -29,8 +29,8 @@ static func flag_sites(sites: Array[DotSpawnSite]) -> Array[DotSpawnSite]:
 
 
 ## Every site a player may spawn on: flag stands left out.
-static func player_sites(sites: Array[DotSpawnSite]) -> Array[DotSpawnSite]:
-	var out: Array[DotSpawnSite] = []
+static func player_sites(sites: Array[GSSpawnSite]) -> Array[GSSpawnSite]:
+	var out: Array[GSSpawnSite] = []
 
 	for s in sites:
 		if not is_flag(s):
@@ -40,7 +40,7 @@ static func player_sites(sites: Array[DotSpawnSite]) -> Array[DotSpawnSite]:
 
 
 ## team id -> the first enabled flag stand of that team.
-static func flag_by_team(sites: Array[DotSpawnSite]) -> Dictionary:
+static func flag_by_team(sites: Array[GSSpawnSite]) -> Dictionary:
 	var out := {}
 
 	for s in flag_sites(sites):
@@ -52,13 +52,13 @@ static func flag_by_team(sites: Array[DotSpawnSite]) -> Dictionary:
 	return out
 
 
-## One base per team (team id -> DotSpawnSite) for [param team_count] teams: the map's flag stands where it has them, and for any team without one the member of that team's player spawns nearest their centre.
+## One base per team (team id -> GSSpawnSite) for [param team_count] teams: the map's flag stands where it has them, and for any team without one the member of that team's player spawns nearest their centre.
 ##
 ## A team with no tagged spawns takes a cluster: the untagged player spawns are split into as many groups as teams still need a base, seeded by farthest-point so two teams get opposite ends of the map. Returns fewer than [param team_count] only when there are not enough spawns to split.
-static func bases(sites: Array[DotSpawnSite], team_count: int) -> Dictionary:
+static func bases(sites: Array[GSSpawnSite], team_count: int) -> Dictionary:
 	var out := flag_by_team(sites)
-	var pool: Array[DotSpawnSite] = []
-	var untagged: Array[DotSpawnSite] = []
+	var pool: Array[GSSpawnSite] = []
+	var untagged: Array[GSSpawnSite] = []
 
 	for s in player_sites(sites):
 		if not s.enabled:
@@ -74,7 +74,7 @@ static func bases(sites: Array[DotSpawnSite], team_count: int) -> Dictionary:
 		if out.has(t):
 			continue
 
-		var own: Array[DotSpawnSite] = []
+		var own: Array[GSSpawnSite] = []
 
 		for s in pool:
 			if team_id(s) == t:
@@ -101,7 +101,7 @@ static func bases(sites: Array[DotSpawnSite], team_count: int) -> Dictionary:
 	return out
 
 
-static func _medoid(group: Array[DotSpawnSite]) -> DotSpawnSite:
+static func _medoid(group: Array[GSSpawnSite]) -> GSSpawnSite:
 	var centre := Vector3.ZERO
 
 	for s in group:
@@ -118,7 +118,7 @@ static func _medoid(group: Array[DotSpawnSite]) -> DotSpawnSite:
 
 
 ## Farthest-point seeding then a few rounds of nearest-seed assignment; deterministic, no random stream.
-static func _cluster(sites: Array[DotSpawnSite], k: int) -> Array:
+static func _cluster(sites: Array[GSSpawnSite], k: int) -> Array:
 	var seeds: Array[Vector3] = []
 	var west := sites[0]
 
@@ -159,7 +159,7 @@ static func _cluster(sites: Array[DotSpawnSite], k: int) -> Array:
 		groups = []
 
 		for i in k:
-			groups.append([] as Array[DotSpawnSite])
+			groups.append([] as Array[GSSpawnSite])
 
 		for s in sites:
 			var bi := 0
@@ -182,7 +182,7 @@ static func _cluster(sites: Array[DotSpawnSite], k: int) -> Array:
 
 			var c := Vector3.ZERO
 
-			for s: DotSpawnSite in g:
+			for s: GSSpawnSite in g:
 				c += s.position
 
 			seeds[i] = c / float(g.size())

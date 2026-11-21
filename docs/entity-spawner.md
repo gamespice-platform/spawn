@@ -1,11 +1,11 @@
-# DotEntitySpawner: spawn anything from a profile
+# GSEntitySpawner: spawn anything from a profile
 
-`DotEntitySpawner` (`runtime/dot_entity_spawner.gd`) is the general sibling of the NPC spawners: it spawns whatever a factory `Callable` produces, keyed by an id from a weighted pool, on a timer or when the last one is taken. A weapon pickup is the first use. It is a `RefCounted` with no scene dependency: the host calls `advance(delta)` each tick, so a test drives it with a fake clock.
+`GSEntitySpawner` (`runtime/dot_entity_spawner.gd`) is the general sibling of the NPC spawners: it spawns whatever a factory `Callable` produces, keyed by an id from a weighted pool, on a timer or when the last one is taken. A weapon pickup is the first use. It is a `RefCounted` with no scene dependency: the host calls `advance(delta)` each tick, so a test drives it with a fake clock.
 
 ## Using it
 
 ```gdscript
-var s := DotEntitySpawner.new(&"crate_1", 42)
+var s := GSEntitySpawner.new(&"crate_1", 42)
 s.factory = func(what: StringName, pos: Vector3, index: int): return make_thing(what, pos)
 s.origin = marker.global_position
 s.set_what(&"pistol")                      # or s.add_entry(&"shotgun", 1.0, stock)
@@ -30,7 +30,7 @@ The factory returns the entity (anything; an `Object` is also tracked for being 
 | `radius` | entities land at a random point in this circle on the XZ plane around `origin` |
 | `max_alive` | hard cap; 0 in a profile means `count` |
 
-Delays and positions draw from one `DotRandomStream` seeded by `seed`, so the same seed and the same calls give the same run. `reset()` restarts it.
+Delays and positions draw from one `GSRandomStream` seeded by `seed`, so the same seed and the same calls give the same run. `reset()` restarts it.
 
 ## Gating
 
@@ -38,18 +38,18 @@ Delays and positions draw from one `DotRandomStream` seeded by `seed`, so the sa
 
 ## Profiles: kind `spawner`
 
-`cfg/addons/dot_spawn/spawner/<id>.yml` (the dashed `dot-spawn` folder is still read through `DotCfgLegacy` until 2026-12-31), `cfg/game/<game>/spawner/<id>.yml`, server and user tiers as [dot-core profiles](../../dot-core/docs/profiles.md). Keys: `what` or `pool` (a list of `id`, `weight`, `stock`; not both), `count`, `max_alive`, `interval`, `respawn_delay`, `initial_delay`, `radius`, `jitter`, `respawn`, `enabled`, `phases`, `team_limit`, `class_limit`, `server_only`, `seed`. Unknown keys fail.
+`cfg/addons/dot_spawn/spawner/<id>.yml` (the dashed `dot-spawn` folder is still read through `GSCfgLegacy` until 2026-12-31), `cfg/game/<game>/spawner/<id>.yml`, server and user tiers as [dot-core profiles](../../dot-core/docs/profiles.md). Keys: `what` or `pool` (a list of `id`, `weight`, `stock`; not both), `count`, `max_alive`, `interval`, `respawn_delay`, `initial_delay`, `radius`, `jitter`, `respawn`, `enabled`, `phases`, `team_limit`, `class_limit`, `server_only`, `seed`. Unknown keys fail.
 
 ```gdscript
-var set := DotEntitySpawner.profile_set("mygame")
-var res := DotEntitySpawner.from_profile(set, "weapon_crate", my_factory)   # DotResult
+var set := GSEntitySpawner.profile_set("mygame")
+var res := GSEntitySpawner.from_profile(set, "weapon_crate", my_factory)   # GSResult
 ```
 
 An empty pool, `what` with `pool`, an entry with no id or a negative weight is `CODE_INVALID`. `profile_check` knows the kind through `--schema addons/dot_spawn/runtime/dot_entity_spawner.gd` (it exposes `profile_schemas()`).
 
 ## Watch and cull
 
-Set `watch` to a `DotSpawnWatch`, a `DotSpawnCull` or anything with `report(id, position, kind, has_goal)` and `forget(id)`; each spawn is reported and each removal forgotten. Checked by `has_method`, so none is required.
+Set `watch` to a `GSSpawnWatch`, a `GSSpawnCull` or anything with `report(id, position, kind, has_goal)` and `forget(id)`; each spawn is reported and each removal forgotten. Checked by `has_method`, so none is required.
 
 ## Weapon example
 

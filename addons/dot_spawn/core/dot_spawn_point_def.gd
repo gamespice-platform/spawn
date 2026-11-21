@@ -1,9 +1,9 @@
-class_name DotSpawnPointDef
+class_name GSSpawnPointDef
 extends RefCounted
 
 ## One authored spawn point with every setting, as plain data; `to_site()` makes the value the director decides on.
 ##
-## Settings the site has no field for travel in `site.meta` under the `META_*` keys, where the point conditions in [DotSpawnConditions] read them.
+## Settings the site has no field for travel in `site.meta` under the `META_*` keys, where the point conditions in [GSSpawnConditions] read them.
 
 const VERSION := 1
 
@@ -57,8 +57,8 @@ var meta: Dictionary = {}
 
 
 ## The site the director collects. [param tick_rate] converts `cooldown` seconds to ticks.
-func to_site(tick_rate: int = 64) -> DotSpawnSite:
-	var s := DotSpawnSite.point(id, position, yaw, team)
+func to_site(tick_rate: int = 64) -> GSSpawnSite:
+	var s := GSSpawnSite.point(id, position, yaw, team)
 	s.classes = classes.duplicate()
 	s.enabled = enabled
 	s.weight = maxf(weight, 0.0)
@@ -100,8 +100,8 @@ func to_dict() -> Dictionary:
 
 
 ## Reads a point; keys that are absent keep the defaults, so an older file loads.
-static func from_dict(d: Dictionary) -> DotSpawnPointDef:
-	var p := DotSpawnPointDef.new()
+static func from_dict(d: Dictionary) -> GSSpawnPointDef:
+	var p := GSSpawnPointDef.new()
 	p.id = StringName(str(d.get("id", "point")))
 	p.kind = StringName(str(d.get("kind", "both")))
 	p.enabled = bool(d.get("enabled", true))
@@ -151,27 +151,27 @@ func problem() -> String:
 	return ""
 
 
-## The editor form: one entry per setting, in [DotProfileSet.field] shape plus `choices` for enums.
+## The editor form: one entry per setting, in [GSProfileSet.field] shape plus `choices` for enums.
 static func schema() -> Array:
 	return [
-		DotProfileSet.field("id", "string", "point"),
-		DotProfileSet.field("kind", "string", "both", {"choices": ["player", "npc", "both", "flag"]}),
-		DotProfileSet.field("enabled", "bool", true),
-		DotProfileSet.field("pos", "vec3", [0.0, 0.0, 0.0]),
-		DotProfileSet.field("yaw", "float", 0.0),
-		DotProfileSet.field("radius", "float", 0.0, {"min": 0.0}),
-		DotProfileSet.field("team", "string", ""),
-		DotProfileSet.field("classes", "list", []),
-		DotProfileSet.field("group", "string", ""),
-		DotProfileSet.field("weight", "float", 1.0, {"min": 0.0}),
-		DotProfileSet.field("cooldown", "float", -1.0),
-		DotProfileSet.field("max_alive", "int", 0, {"min": 0}),
-		DotProfileSet.field("phases", "list", []),
-		DotProfileSet.field("sight", "string", "any", {"choices": ["any", "hidden_from_players", "visible_to_players"]}),
-		DotProfileSet.field("min_player_distance", "float", 0.0, {"min": 0.0}),
-		DotProfileSet.field("max_player_distance", "float", 0.0, {"min": 0.0}),
-		DotProfileSet.field("source", "string", "authored", {"choices": ["map", "authored", "generated"]}),
-		DotProfileSet.field("meta", "dict", {}),
+		GSProfileSet.field("id", "string", "point"),
+		GSProfileSet.field("kind", "string", "both", {"choices": ["player", "npc", "both", "flag"]}),
+		GSProfileSet.field("enabled", "bool", true),
+		GSProfileSet.field("pos", "vec3", [0.0, 0.0, 0.0]),
+		GSProfileSet.field("yaw", "float", 0.0),
+		GSProfileSet.field("radius", "float", 0.0, {"min": 0.0}),
+		GSProfileSet.field("team", "string", ""),
+		GSProfileSet.field("classes", "list", []),
+		GSProfileSet.field("group", "string", ""),
+		GSProfileSet.field("weight", "float", 1.0, {"min": 0.0}),
+		GSProfileSet.field("cooldown", "float", -1.0),
+		GSProfileSet.field("max_alive", "int", 0, {"min": 0}),
+		GSProfileSet.field("phases", "list", []),
+		GSProfileSet.field("sight", "string", "any", {"choices": ["any", "hidden_from_players", "visible_to_players"]}),
+		GSProfileSet.field("min_player_distance", "float", 0.0, {"min": 0.0}),
+		GSProfileSet.field("max_player_distance", "float", 0.0, {"min": 0.0}),
+		GSProfileSet.field("source", "string", "authored", {"choices": ["map", "authored", "generated"]}),
+		GSProfileSet.field("meta", "dict", {}),
 	]
 
 

@@ -1,5 +1,5 @@
 @tool
-class_name DotSpawnConditions
+class_name GSSpawnConditions
 extends RefCounted
 
 ## The five conditions every project writes, so that no project has to write them.
@@ -7,7 +7,7 @@ extends RefCounted
 ## Together in one file on purpose: they are a hundred lines between them, they are read
 ## as a set, and five files each holding one twenty-line subclass is five files somebody
 ## has to find. Anything longer than these belongs in its own file, as
-## [DotSpawnCondition] documents.
+## [GSSpawnCondition] documents.
 
 
 ## A hard floor on how close an enemy may be.
@@ -15,14 +15,14 @@ extends RefCounted
 ## Distinct from the distance [i]weight[/i], which trades: this does not. There is a
 ## distance at which a spawn is not a bad spawn but a death, and no amount of scoring
 ## anywhere else should be able to buy it back.
-class MinimumEnemyDistance extends DotSpawnCondition:
+class MinimumEnemyDistance extends GSSpawnCondition:
 	var metres: float = 8.0
 
 	func _init(p_metres: float = 8.0) -> void:
 		metres = p_metres
 		id = &"minimum_enemy_distance"
 
-	func allows(site: DotSpawnSite, context: Dictionary) -> bool:
+	func allows(site: GSSpawnSite, context: Dictionary) -> bool:
 		if metres <= 0.0:
 			return true
 
@@ -44,7 +44,7 @@ class MinimumEnemyDistance extends DotSpawnCondition:
 ## Uses the [code]can_see[/code] callable out of the context rather than casting a ray
 ## itself, because this addon has no opinion about which collision layers count and
 ## GameSpice Physics already does.
-class OutOfSight extends DotSpawnCondition:
+class OutOfSight extends GSSpawnCondition:
 	## Whether being seen is a veto or merely a penalty.
 	var hard: bool = false
 	var penalty: float = 500.0
@@ -54,19 +54,19 @@ class OutOfSight extends DotSpawnCondition:
 		penalty = p_penalty
 		id = &"out_of_sight"
 
-	func allows(site: DotSpawnSite, context: Dictionary) -> bool:
+	func allows(site: GSSpawnSite, context: Dictionary) -> bool:
 		if not hard:
 			return true
 
 		return not _seen(site, context)
 
-	func bonus(site: DotSpawnSite, context: Dictionary) -> float:
+	func bonus(site: GSSpawnSite, context: Dictionary) -> float:
 		if hard:
 			return 0.0
 
 		return -penalty if _seen(site, context) else 0.0
 
-	func _seen(site: DotSpawnSite, context: Dictionary) -> bool:
+	func _seen(site: GSSpawnSite, context: Dictionary) -> bool:
 		var can_see: Variant = context.get("can_see", null)
 
 		if not (can_see is Callable):
@@ -88,21 +88,21 @@ class OutOfSight extends DotSpawnCondition:
 
 
 ## Penalises, or refuses, a site somebody is already standing on.
-class NotOccupied extends DotSpawnCondition:
+class NotOccupied extends GSSpawnCondition:
 	var hard: bool = true
 
 	func _init(p_hard: bool = true) -> void:
 		hard = p_hard
 		id = &"not_occupied"
 
-	func allows(site: DotSpawnSite, _context: Dictionary) -> bool:
+	func allows(site: GSSpawnSite, _context: Dictionary) -> bool:
 		# An area is big enough to hold several, which is the reason areas exist.
 		if not hard or site.is_area():
 			return true
 
 		return site.occupants <= 0
 
-	func bonus(site: DotSpawnSite, _context: Dictionary) -> float:
+	func bonus(site: GSSpawnSite, _context: Dictionary) -> float:
 		return 0.0 if hard else -400.0 * float(site.occupants)
 
 	func reason() -> String:
@@ -114,7 +114,7 @@ class NotOccupied extends DotSpawnCondition:
 ## The general-purpose escape hatch: a mapper tags a site
 ## [code]{"zone": "attackers"}[/code] and a game mode requires it, with nothing in this
 ## addon needing to know what a zone is.
-class MetaEquals extends DotSpawnCondition:
+class MetaEquals extends GSSpawnCondition:
 	var key: String = ""
 	var want: Variant = null
 
@@ -123,17 +123,17 @@ class MetaEquals extends DotSpawnCondition:
 		want = p_want
 		id = StringName("meta_%s" % p_key)
 
-	func allows(site: DotSpawnSite, _context: Dictionary) -> bool:
+	func allows(site: GSSpawnSite, _context: Dictionary) -> bool:
 		if key == "":
 			return true
 
 		if not site.meta.has(key):
 			return false
 
-		# DotValue rather than ==: the two sides come from a level file and from game
+		# GSValue rather than ==: the two sides come from a level file and from game
 		# code, so their Variant types are not under one author's control, and == on
 		# mismatched types is a runtime error that abandons the expression.
-		return DotValue.same(site.meta[key], want)
+		return GSValue.same(site.meta[key], want)
 
 	func reason() -> String:
 		return "its '%s' is not %s" % [key, str(want)]
@@ -155,15 +155,15 @@ class MetaEquals extends DotSpawnCondition:
 ## because picking it yourself is one line.
 ##
 ## [codeblock]
-## spawns.conditions = [DotSpawnConditions.MetaMatchesRequest.new("track")]
-## spawns.choose(DotSpawnRequest.make(key, team, klass, tick, {"track": 2}))
+## spawns.conditions = [GSSpawnConditions.MetaMatchesRequest.new("track")]
+## spawns.choose(GSSpawnRequest.make(key, team, klass, tick, {"track": 2}))
 ## [/codeblock]
 ##
 ## A request that does not carry the field at all matches [b]every[/b] site rather than
 ## none, because "I did not ask" is not "I asked for nothing" — a caller with no opinion
 ## about the track wants the ordinary selection over all of them, and refusing everything
 ## would make an unasked question a map with no spawns.
-class MetaMatchesRequest extends DotSpawnCondition:
+class MetaMatchesRequest extends GSSpawnCondition:
 	## The site meta key, and by default the request `extra` key as well.
 	var key: String = ""
 
@@ -182,7 +182,7 @@ class MetaMatchesRequest extends DotSpawnCondition:
 		require_site_meta = p_require
 		id = StringName("meta_matches_%s" % p_key)
 
-	func allows(site: DotSpawnSite, context: Dictionary) -> bool:
+	func allows(site: GSSpawnSite, context: Dictionary) -> bool:
 		if key == "":
 			return true
 
@@ -195,22 +195,22 @@ class MetaMatchesRequest extends DotSpawnCondition:
 		if not site.meta.has(key):
 			return not require_site_meta
 
-		# DotValue rather than ==, for [MetaEquals]' reason: one side comes from a level
+		# GSValue rather than ==, for [MetaEquals]' reason: one side comes from a level
 		# file and the other from game code, and == on two different Variant types is a
 		# runtime error that abandons the whole expression rather than answering false.
-		return DotValue.same(site.meta[key], extra[from_request])
+		return GSValue.same(site.meta[key], extra[from_request])
 
 	func reason() -> String:
 		return "its '%s' is not the one the request asked for" % key
 
 
 ## Refuses a point whose `max_alive` is reached; the host puts `alive_by_site` (id to count) in the request extra.
-class MaxAlive extends DotSpawnCondition:
+class MaxAlive extends GSSpawnCondition:
 	func _init() -> void:
 		id = &"max_alive"
 
-	func allows(site: DotSpawnSite, context: Dictionary) -> bool:
-		var cap := int(site.meta.get(DotSpawnPointDef.META_MAX_ALIVE, 0))
+	func allows(site: GSSpawnSite, context: Dictionary) -> bool:
+		var cap := int(site.meta.get(GSSpawnPointDef.META_MAX_ALIVE, 0))
 
 		if cap <= 0:
 			return true
@@ -223,12 +223,12 @@ class MaxAlive extends DotSpawnCondition:
 
 
 ## Refuses a point that is not live in the request's `phase`; a request without one matches every point.
-class PhaseIs extends DotSpawnCondition:
+class PhaseIs extends GSSpawnCondition:
 	func _init() -> void:
 		id = &"phase_is"
 
-	func allows(site: DotSpawnSite, context: Dictionary) -> bool:
-		var phases: Array = site.meta.get(DotSpawnPointDef.META_PHASES, [])
+	func allows(site: GSSpawnSite, context: Dictionary) -> bool:
+		var phases: Array = site.meta.get(GSSpawnPointDef.META_PHASES, [])
 		var extra: Dictionary = context.get("extra", {})
 
 		if phases.is_empty() or not extra.has("phase"):
@@ -241,12 +241,12 @@ class PhaseIs extends DotSpawnCondition:
 
 
 ## Refuses a point of the other kind (`player` or `npc`) than the request's `kind`; `both` fits either. A `flag` point fits only a request that asks for `flag`, so nobody spawns on a flag stand.
-class KindIs extends DotSpawnCondition:
+class KindIs extends GSSpawnCondition:
 	func _init() -> void:
 		id = &"kind_is"
 
-	func allows(site: DotSpawnSite, context: Dictionary) -> bool:
-		var kind := str(site.meta.get(DotSpawnPointDef.META_KIND, "both"))
+	func allows(site: GSSpawnSite, context: Dictionary) -> bool:
+		var kind := str(site.meta.get(GSSpawnPointDef.META_KIND, "both"))
 		var extra: Dictionary = context.get("extra", {})
 
 		if kind == "flag":
@@ -262,19 +262,19 @@ class KindIs extends DotSpawnCondition:
 
 
 ## Keeps a point inside its band of distance from the nearest player (enemies and friends); no players, no opinion.
-class DistanceBand extends DotSpawnCondition:
+class DistanceBand extends GSSpawnCondition:
 	func _init() -> void:
 		id = &"distance_band"
 
-	func allows(site: DotSpawnSite, context: Dictionary) -> bool:
+	func allows(site: GSSpawnSite, context: Dictionary) -> bool:
 		var players: Array = (context.get("enemies", []) as Array) + (context.get("friends", []) as Array)
-		var nearest := DotSpawnScoring.nearest_distance(site, players)
+		var nearest := GSSpawnScoring.nearest_distance(site, players)
 
 		if nearest == INF:
 			return true
 
-		var lo := float(site.meta.get(DotSpawnPointDef.META_MIN_DIST, 0.0))
-		var hi := float(site.meta.get(DotSpawnPointDef.META_MAX_DIST, 0.0))
+		var lo := float(site.meta.get(GSSpawnPointDef.META_MIN_DIST, 0.0))
+		var hi := float(site.meta.get(GSSpawnPointDef.META_MAX_DIST, 0.0))
 		return nearest >= lo and (hi <= 0.0 or nearest <= hi)
 
 	func reason() -> String:
@@ -282,19 +282,19 @@ class DistanceBand extends DotSpawnCondition:
 
 
 ## Applies a point's `sight` rule through the context's `can_see`; without one there is no opinion.
-class SightRule extends DotSpawnCondition:
+class SightRule extends GSSpawnCondition:
 	func _init() -> void:
 		id = &"sight_rule"
 
-	func allows(site: DotSpawnSite, context: Dictionary) -> bool:
-		var rule := str(site.meta.get(DotSpawnPointDef.META_SIGHT, "any"))
+	func allows(site: GSSpawnSite, context: Dictionary) -> bool:
+		var rule := str(site.meta.get(GSSpawnPointDef.META_SIGHT, "any"))
 		var can_see: Variant = context.get("can_see", null)
 
 		if rule == "any" or not (can_see is Callable) or not (can_see as Callable).is_valid():
 			return true
 
 		var players: Array = (context.get("enemies", []) as Array) + (context.get("friends", []) as Array)
-		var seen := DotSpawnScoring.seen_by_any(site.position, players, can_see)
+		var seen := GSSpawnScoring.seen_by_any(site.position, players, can_see)
 		return not seen if rule == "hidden_from_players" else seen
 
 	func reason() -> String:
@@ -302,17 +302,17 @@ class SightRule extends DotSpawnCondition:
 
 
 ## Turns `weight` into a score: zero refuses the point, otherwise (weight - 1) * step.
-class WeightBonus extends DotSpawnCondition:
+class WeightBonus extends GSSpawnCondition:
 	var step: float = 100.0
 
 	func _init(p_step: float = 100.0) -> void:
 		step = p_step
 		id = &"weight_bonus"
 
-	func allows(site: DotSpawnSite, _context: Dictionary) -> bool:
+	func allows(site: GSSpawnSite, _context: Dictionary) -> bool:
 		return site.weight > 0.0
 
-	func bonus(site: DotSpawnSite, _context: Dictionary) -> float:
+	func bonus(site: GSSpawnSite, _context: Dictionary) -> float:
 		return (site.weight - 1.0) * step
 
 	func reason() -> String:

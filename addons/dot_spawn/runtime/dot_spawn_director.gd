@@ -1,24 +1,24 @@
-class_name DotSpawnDirector
+class_name GSSpawnDirector
 extends Node
 
 ## Collects the sites, filters them, scores them, and answers where something goes.
 ##
 ## [b]The node is a container for a decision that is otherwise pure.[/b] Collection
-## touches the scene tree; everything after it works on [DotSpawnSite] values, which is
+## touches the scene tree; everything after it works on [GSSpawnSite] values, which is
 ## why [method choose_from] is public and takes its own array — a test, a replay and a
 ## server all reach the same answer without a world.
 ##
 ## [codeblock]
-## var spawns := DotSpawnDirector.new()
-## spawns.rules = DotSpawnRules.team_deathmatch()
+## var spawns := GSSpawnDirector.new()
+## spawns.rules = GSSpawnRules.team_deathmatch()
 ## spawns.enemies_fn = func(team): return positions_of_enemies_of(team)
 ## spawns.enemies_fn = func(team, key): return positions_of_enemies_of(team, key)   # or with the spawning key
 ## add_child(spawns)
 ## spawns.refresh()
 ##
-## var res := spawns.choose(DotSpawnRequest.make("ada", &"blue", &"rifleman", tick))
+## var res := spawns.choose(GSSpawnRequest.make("ada", &"blue", &"rifleman", tick))
 ## if res.ok:
-##     var choice: DotSpawnChoice = res.value
+##     var choice: GSSpawnChoice = res.value
 ##     player.global_transform = choice.transform
 ## [/codeblock]
 
@@ -28,7 +28,7 @@ const CHANNEL := "spawn"
 const SERVICE := &"dot_spawn_director"
 
 ## A site was chosen. The game does the moving; this addon only decides.
-signal chosen(key: String, choice: DotSpawnChoice)
+signal chosen(key: String, choice: GSSpawnChoice)
 
 ## Nothing passed and the fallback was used. Worth surfacing: it means the map's
 ## conditions and the mode's rules disagree, which is a content bug.
@@ -37,19 +37,19 @@ signal fell_back(key: String, why: String, tick: int)
 ## Somebody's respawn timer came due.
 signal respawn_due(key: String, tick: int)
 
-@export var rules: DotSpawnRules = null
+@export var rules: GSSpawnRules = null
 
 ## Where to look for marker and area nodes. Empty searches from this node's scene root.
-@export var sites_ref: DotNodeRef = null
+@export var sites_ref: GSNodeRef = null
 
 ## Ticks per second, for turning the rules' seconds into ticks.
 @export_range(1, 1000, 1) var tick_rate: int = 60
 
-## Whether to register in [DotRegistry] under [constant SERVICE].
+## Whether to register in [GSRegistry] under [constant SERVICE].
 @export var register_service: bool = true
 
 ## Extra rules, consulted after the built-in filtering.
-var conditions: Array[DotSpawnCondition] = []
+var conditions: Array[GSSpawnCondition] = []
 
 ## `func(team: StringName) -> Array[Vector3]`. Where the other side is.
 ##
@@ -63,20 +63,20 @@ var friends_fn: Callable = Callable()
 
 ## `func(from: Vector3, to: Vector3) -> bool`. Whether one point can see another.
 ##
-## GameSpice Physics' [code]DotPhysicsQuery.line_of_sight_3d[/code] is exactly this shape.
+## GameSpice Physics' [code]GSPhysicsQuery.line_of_sight_3d[/code] is exactly this shape.
 var can_see_fn: Callable = Callable()
 
 ## `func(count: int, clearance: float, map_id: String) -> Array`. Sites over the game's navigation (an even spread with clearance) for [method ensure_generated]; the result is cached per map id and version.
 var generate_fn: Callable = Callable()
 
 ## Protection, if the rules ask for any. Created on demand.
-var protection: DotSpawnProtection = null
+var protection: GSSpawnProtection = null
 
-var _sites: Array[DotSpawnSite] = []
+var _sites: Array[GSSpawnSite] = []
 var _round_robin: int = 0
 var _respawn_at: Dictionary = {}
 var _next_wave_tick: int = -1
-var _last_choice: DotSpawnChoice = null
+var _last_choice: GSSpawnChoice = null
 var _batch_picks: Array[Vector3] = []
 var _recent: Array[Vector3] = []
 ## Per group: the anchor position and the site ids already taken, for the `grouped` strategy.
@@ -90,13 +90,13 @@ var _generated: Dictionary = {}
 
 func _ready() -> void:
 	if rules == null:
-		rules = DotSpawnRules.new()
+		rules = GSSpawnRules.new()
 
 	if protection == null:
-		protection = DotSpawnProtection.new(rules)
+		protection = GSSpawnProtection.new(rules)
 
 	if register_service:
-		DotRegistry.register(SERVICE, self)
+		GSRegistry.register(SERVICE, self)
 
 
 # --- Collecting -------------------------------------------------------------
@@ -137,11 +137,11 @@ func refresh(announce_empty: bool = true) -> void:
 
 	if _sites.is_empty():
 		if announce_empty:
-			DotLog.warn(CHANNEL, "no spawn sites found", {"root": root.name if root else "<none>"})
+			GSLog.warn(CHANNEL, "no spawn sites found", {"root": root.name if root else "<none>"})
 		else:
-			DotLog.debug(CHANNEL, "no spawn sites yet")
+			GSLog.debug(CHANNEL, "no spawn sites yet")
 	else:
-		DotLog.debug(CHANNEL, "spawn sites", {"count": _sites.size()})
+		GSLog.debug(CHANNEL, "spawn sites", {"count": _sites.size()})
 
 
 func _collect(node: Node) -> void:
@@ -151,14 +151,14 @@ func _collect(node: Node) -> void:
 		# two node classes".
 		if child.has_method("to_site"):
 			var site: Variant = child.call("to_site")
-			if site is DotSpawnSite:
-				_sites.append(site as DotSpawnSite)
+			if site is GSSpawnSite:
+				_sites.append(site as GSSpawnSite)
 
 		_collect(child)
 
 
 ## Adds a site that is not in the scene. For a level built at runtime.
-func add_site(site: DotSpawnSite) -> void:
+func add_site(site: GSSpawnSite) -> void:
 	if site != null and not _sites.has(site):
 		_sites.append(site)
 
@@ -174,28 +174,28 @@ func remove_site(site_id: StringName) -> int:
 	return removed
 
 
-## Applies an admin's per-map edits (a `spawn` profile, see [DotSpawnOverrides]) to the collected sites. Value: how many entries took effect.
+## Applies an admin's per-map edits (a `spawn` profile, see [GSSpawnOverrides]) to the collected sites. Value: how many entries took effect.
 ##
 ## Call it after [method refresh] and [method ensure_generated], since a refresh drops authored points with the rest.
-func load_overrides(profiles: DotProfileSet, map_id: String) -> DotResult:
+func load_overrides(profiles: GSProfileSet, map_id: String) -> GSResult:
 	if profiles == null or map_id.is_empty():
-		return DotResult.success(0)
+		return GSResult.success(0)
 
 	if not profiles.has_id(map_id):
-		return DotResult.success(0)
+		return GSResult.success(0)
 
 	var res := profiles.load_profile(map_id)
 
 	if not res.ok:
 		return res
 
-	var points: Variant = (res.value as DotProfile).get_value("points", {})
-	var n := DotSpawnOverrides.apply(_sites, points if points is Dictionary else {})
-	DotLog.debug(CHANNEL, "spawn overrides", {"map": map_id, "applied": n})
-	return DotResult.success(n)
+	var points: Variant = (res.value as GSProfile).get_value("points", {})
+	var n := GSSpawnOverrides.apply(_sites, points if points is Dictionary else {})
+	GSLog.debug(CHANNEL, "spawn overrides", {"map": map_id, "applied": n})
+	return GSResult.success(n)
 
 
-func sites() -> Array[DotSpawnSite]:
+func sites() -> Array[GSSpawnSite]:
 	return _sites
 
 
@@ -212,27 +212,27 @@ func reset_groups() -> void:
 
 
 ## Picks a site for a request out of the collected ones.
-func choose(request: DotSpawnRequest) -> DotResult:
+func choose(request: GSSpawnRequest) -> GSResult:
 	return choose_from(_sites, request)
 
 
 ## The same decision, over an array the caller supplies. The testable half.
 ##
-## Fails only when there is nothing: no sites, or all rejected with the fallback off. A bad-but-used site is a success with [member DotSpawnChoice.fell_back] set, so nobody is left unspawned.
-func choose_from(from: Array[DotSpawnSite], request: DotSpawnRequest) -> DotResult:
+## Fails only when there is nothing: no sites, or all rejected with the fallback off. A bad-but-used site is a success with [member GSSpawnChoice.fell_back] set, so nobody is left unspawned.
+func choose_from(from: Array[GSSpawnSite], request: GSSpawnRequest) -> GSResult:
 	if rules == null:
-		rules = DotSpawnRules.new()
+		rules = GSSpawnRules.new()
 
 	if from.is_empty():
-		return DotResult.fail(
-			DotError.CODE_STATE,
+		return GSResult.fail(
+			GSError.CODE_STATE,
 			"There are no spawn sites at all.",
 			"A level with no markers and nothing added in code. See refresh()."
 		)
 
 	var context := _context(request)
-	var allowed: Array[DotSpawnSite] = []
-	var rejected: Array[DotSpawnSite] = []
+	var allowed: Array[GSSpawnSite] = []
+	var rejected: Array[GSSpawnSite] = []
 	var why := ""
 
 	for site in from:
@@ -259,15 +259,15 @@ func choose_from(from: Array[DotSpawnSite], request: DotSpawnRequest) -> DotResu
 
 	if pool.is_empty():
 		if not rules.fall_back_when_nothing_passes:
-			return DotResult.fail(
-				DotError.CODE_STATE,
+			return GSResult.fail(
+				GSError.CODE_STATE,
 				"Every spawn site was rejected: %s." % (why if why != "" else "no reason given"),
 				"%d sites considered." % from.size()
 			)
 
 		# Not optional: a round where nobody spawns looks like a crash.
 		pool = rejected
-		DotLog.warn(CHANNEL, "spawning against the rules", {
+		GSLog.warn(CHANNEL, "spawning against the rules", {
 			"key": request.key, "why": why, "sites": from.size()
 		})
 
@@ -276,9 +276,9 @@ func choose_from(from: Array[DotSpawnSite], request: DotSpawnRequest) -> DotResu
 	var picked := _pick_by_strategy(pool, context, rng)
 
 	if picked == null:
-		return DotResult.fail(DotError.CODE_INTERNAL, "The selector chose nothing.")
+		return GSResult.fail(GSError.CODE_INTERNAL, "The selector chose nothing.")
 
-	var choice := DotSpawnChoice.new()
+	var choice := GSSpawnChoice.new()
 	choice.site = picked
 	choice.transform = picked.sample(rng)
 	choice.tick = request.tick
@@ -287,10 +287,10 @@ func choose_from(from: Array[DotSpawnSite], request: DotSpawnRequest) -> DotResu
 	choice.considered = from.size()
 	choice.allowed = allowed.size()
 	_commit_choice(choice, request, why)
-	return DotResult.success(choice)
+	return GSResult.success(choice)
 
 
-func _commit_choice(choice: DotSpawnChoice, request: DotSpawnRequest, why: String) -> void:
+func _commit_choice(choice: GSSpawnChoice, request: GSSpawnRequest, why: String) -> void:
 	choice.site.last_used_tick = request.tick
 	_last_choice = choice
 	_remember_pick(choice.transform.origin)
@@ -300,7 +300,7 @@ func _commit_choice(choice: DotSpawnChoice, request: DotSpawnRequest, why: Strin
 
 	if rules.protection_sec > 0.0:
 		if protection == null:
-			protection = DotSpawnProtection.new(rules)
+			protection = GSSpawnProtection.new(rules)
 		choice.protected_until = protection.grant(
 			request.key, request.tick, tick_rate, choice.site.id, choice.transform.origin
 		)
@@ -310,9 +310,9 @@ func _commit_choice(choice: DotSpawnChoice, request: DotSpawnRequest, why: Strin
 
 ## Picks for several requests that spawn together, each away from the earlier picks.
 ##
-## Only the `spread` and `grouped` strategies read the earlier picks (`grouped` keys on `extra["group"]`, else the team); under any other the result is the same as calling [method choose] in turn. Returns an array of [DotSpawnChoice], or the first failure.
-func choose_batch(requests: Array[DotSpawnRequest]) -> DotResult:
-	var choices: Array[DotSpawnChoice] = []
+## Only the `spread` and `grouped` strategies read the earlier picks (`grouped` keys on `extra["group"]`, else the team); under any other the result is the same as calling [method choose] in turn. Returns an array of [GSSpawnChoice], or the first failure.
+func choose_batch(requests: Array[GSSpawnRequest]) -> GSResult:
+	var choices: Array[GSSpawnChoice] = []
 	_batch_picks.clear()
 	reset_groups()
 	_in_batch = true
@@ -326,14 +326,14 @@ func choose_batch(requests: Array[DotSpawnRequest]) -> DotResult:
 			_in_batch = false
 			return res
 
-		var choice: DotSpawnChoice = res.value
+		var choice: GSSpawnChoice = res.value
 		choices.append(choice)
 		_batch_picks.append(choice.transform.origin)
 
 	_batch_picks.clear()
 	reset_groups()
 	_in_batch = false
-	return DotResult.success(choices)
+	return GSResult.success(choices)
 
 
 ## Adds the game's generated sites for a map, per the rules' `generate` setting. Returns how many were added.
@@ -341,7 +341,7 @@ func choose_batch(requests: Array[DotSpawnRequest]) -> DotResult:
 ## Cached per map id and version, so a reload does not ask the game to generate again; call it after [method refresh], which drops them with the other sites.
 func ensure_generated(map_id: String, map_version: int = 0) -> int:
 	if rules == null:
-		rules = DotSpawnRules.new()
+		rules = GSSpawnRules.new()
 
 	if rules.generate == "off" or not generate_fn.is_valid():
 		return 0
@@ -365,27 +365,27 @@ func ensure_generated(map_id: String, map_version: int = 0) -> int:
 
 	if not _generated.has(key):
 		var made: Variant = generate_fn.call(rules.generate_count, rules.generate_clearance, map_id)
-		var kept: Array[DotSpawnSite] = []
+		var kept: Array[GSSpawnSite] = []
 
 		if made is Array:
 			for item: Variant in made:
-				if item is DotSpawnSite:
-					(item as DotSpawnSite).source = &"generated"
-					kept.append(item as DotSpawnSite)
+				if item is GSSpawnSite:
+					(item as GSSpawnSite).source = &"generated"
+					kept.append(item as GSSpawnSite)
 
 		_generated[key] = kept
 
-	var cached: Array[DotSpawnSite] = _generated[key]
+	var cached: Array[GSSpawnSite] = _generated[key]
 	_sites.append_array(cached)
 	return cached.size()
 
 
 ## The score a site gets, exposed so a game can explain a choice to a player.
-func score_of(site: DotSpawnSite, request: DotSpawnRequest) -> float:
-	return DotSpawnScoring.score(rules, conditions, site, _context(request))
+func score_of(site: GSSpawnSite, request: GSSpawnRequest) -> float:
+	return GSSpawnScoring.score(rules, conditions, site, _context(request))
 
 
-func last_choice() -> DotSpawnChoice:
+func last_choice() -> GSSpawnChoice:
 	return _last_choice
 
 
@@ -502,12 +502,12 @@ func describe_lines() -> PackedStringArray:
 
 
 func describe() -> String:
-	return "DotSpawnDirector(%d sites, %s)" % [_sites.size(), rules.mode_name()]
+	return "GSSpawnDirector(%d sites, %s)" % [_sites.size(), rules.mode_name()]
 
 
 # --- Internals --------------------------------------------------------------
 
-func _context(request: DotSpawnRequest) -> Dictionary:
+func _context(request: GSSpawnRequest) -> Dictionary:
 	var enemies: Array = []
 	var friends: Array = []
 
@@ -534,9 +534,9 @@ func _context(request: DotSpawnRequest) -> Dictionary:
 
 ## One generator per request, from the seed, the tick and the key.
 ##
-## Never a shared member: one stream makes a spawn depend on how many came first, so server and client diverge. Seeded by [DotRandomStream] (FNV-1a), not [method String.hash], which is not stable across engine versions.
-func _rng(request: DotSpawnRequest) -> RandomNumberGenerator:
-	var stream := DotRandomStream.new(rules.seed_value, &"spawn")
+## Never a shared member: one stream makes a spawn depend on how many came first, so server and client diverge. Seeded by [GSRandomStream] (FNV-1a), not [method String.hash], which is not stable across engine versions.
+func _rng(request: GSSpawnRequest) -> RandomNumberGenerator:
+	var stream := GSRandomStream.new(rules.seed_value, &"spawn")
 
 	if rules.per_key_stream and not request.key.is_empty():
 		stream = stream.stream(StringName(request.key))
@@ -549,29 +549,29 @@ func _rng(request: DotSpawnRequest) -> RandomNumberGenerator:
 
 ## Walks the rules' strategies in order; the first that yields a site wins.
 func _pick_by_strategy(
-	pool: Array[DotSpawnSite],
+	pool: Array[GSSpawnSite],
 	context: Dictionary,
 	rng: RandomNumberGenerator
-) -> DotSpawnSite:
+) -> GSSpawnSite:
 	var names := rules.strategies()
 
 	if names.is_empty():
 		names.append("map")
 
 	for name in names:
-		var picked: DotSpawnSite = null
+		var picked: GSSpawnSite = null
 
 		match name:
 			"scatter":
-				picked = DotSpawnScoring.pick_scatter(rules, _recent, pool, context, rng)
+				picked = GSSpawnScoring.pick_scatter(rules, _recent, pool, context, rng)
 			"spread":
 				picked = _pick_spread(pool, context, rng)
 			"grouped":
 				picked = _pick_grouped(pool, context, rng)
 			"near_team":
-				picked = _pick_mode(_without_generated(pool), DotSpawnRules.Mode.NEAREST_FRIEND, context, rng)
+				picked = _pick_mode(_without_generated(pool), GSSpawnRules.Mode.NEAREST_FRIEND, context, rng)
 			"far_from_enemies":
-				picked = _pick_mode(_without_generated(pool), DotSpawnRules.Mode.FURTHEST, context, rng)
+				picked = _pick_mode(_without_generated(pool), GSSpawnRules.Mode.FURTHEST, context, rng)
 			_:
 				picked = _pick(_without_generated(pool), context, rng)
 
@@ -596,8 +596,8 @@ func reset_recent() -> void:
 	_recent.clear()
 
 
-func _without_generated(pool: Array[DotSpawnSite]) -> Array[DotSpawnSite]:
-	var out: Array[DotSpawnSite] = []
+func _without_generated(pool: Array[GSSpawnSite]) -> Array[GSSpawnSite]:
+	var out: Array[GSSpawnSite] = []
 
 	for site in pool:
 		if site.source != &"generated":
@@ -607,11 +607,11 @@ func _without_generated(pool: Array[DotSpawnSite]) -> Array[DotSpawnSite]:
 
 
 func _pick_mode(
-	pool: Array[DotSpawnSite],
+	pool: Array[GSSpawnSite],
 	mode: int,
 	context: Dictionary,
 	rng: RandomNumberGenerator
-) -> DotSpawnSite:
+) -> GSSpawnSite:
 	var kept := rules.mode
 	rules.mode = mode
 	var picked := _pick(pool, context, rng)
@@ -621,8 +621,8 @@ func _pick_mode(
 
 ## Farthest-point pick: the site whose nearest earlier pick or living team-mate is farthest.
 ##
-## The floor is [member DotSpawnRules.spread_distance]; when even the best site is nearer, it halves down to [member DotSpawnRules.spread_min] and is only logged, because the farthest site is still the best answer. Ties go to priority, then id.
-func _pick_spread(pool: Array[DotSpawnSite], context: Dictionary, rng: RandomNumberGenerator, picks: Array = _batch_picks) -> DotSpawnSite:
+## The floor is [member GSSpawnRules.spread_distance]; when even the best site is nearer, it halves down to [member GSSpawnRules.spread_min] and is only logged, because the farthest site is still the best answer. Ties go to priority, then id.
+func _pick_spread(pool: Array[GSSpawnSite], context: Dictionary, rng: RandomNumberGenerator, picks: Array = _batch_picks) -> GSSpawnSite:
 	if pool.is_empty():
 		return null
 
@@ -633,11 +633,11 @@ func _pick_spread(pool: Array[DotSpawnSite], context: Dictionary, rng: RandomNum
 	if avoid.is_empty():
 		return _pick(pool, context, rng)
 
-	var best: DotSpawnSite = null
+	var best: GSSpawnSite = null
 	var best_d := -INF
 
 	for site in pool:
-		var d := DotSpawnScoring.nearest_distance(site, avoid)
+		var d := GSSpawnScoring.nearest_distance(site, avoid)
 
 		if best == null or d > best_d + 0.0001:
 			best = site
@@ -654,16 +654,16 @@ func _pick_spread(pool: Array[DotSpawnSite], context: Dictionary, rng: RandomNum
 		floor_d = maxf(rules.spread_min, floor_d * 0.5)
 
 	if best_d < floor_d:
-		DotLog.debug(CHANNEL, "spread below its floor", {"nearest": best_d, "floor": floor_d})
+		GSLog.debug(CHANNEL, "spread below its floor", {"nearest": best_d, "floor": floor_d})
 
 	if not rules.spread_floor_steers:
 		return best
 
 	# Sites meeting the floor, then the mode chooses among them so a batch still varies; the farthest is only the last resort.
-	var meeting: Array[DotSpawnSite] = []
+	var meeting: Array[GSSpawnSite] = []
 
 	for site in pool:
-		if DotSpawnScoring.nearest_distance(site, avoid) >= floor_d:
+		if GSSpawnScoring.nearest_distance(site, avoid) >= floor_d:
 			meeting.append(site)
 
 	if meeting.is_empty():
@@ -673,7 +673,7 @@ func _pick_spread(pool: Array[DotSpawnSite], context: Dictionary, rng: RandomNum
 
 
 ## The first request of a group anchors it (anchors spread from each other); the rest take sites within `group_radius` of the anchor, unused ones first, so a team arrives together.
-func _pick_grouped(pool: Array[DotSpawnSite], context: Dictionary, rng: RandomNumberGenerator) -> DotSpawnSite:
+func _pick_grouped(pool: Array[GSSpawnSite], context: Dictionary, rng: RandomNumberGenerator) -> GSSpawnSite:
 	if pool.is_empty():
 		return null
 
@@ -687,8 +687,8 @@ func _pick_grouped(pool: Array[DotSpawnSite], context: Dictionary, rng: RandomNu
 
 	var center: Vector3 = _group_anchors[_current_group]
 	var taken: Array = _group_taken[_current_group]
-	var inside: Array[DotSpawnSite] = []
-	var nearest: DotSpawnSite = null
+	var inside: Array[GSSpawnSite] = []
+	var nearest: GSSpawnSite = null
 	var nearest_d := INF
 
 	for site in pool:
@@ -707,12 +707,12 @@ func _pick_grouped(pool: Array[DotSpawnSite], context: Dictionary, rng: RandomNu
 		_group_taken.erase(_current_group)
 		return _pick_grouped(pool, context, rng)
 
-	var picked: DotSpawnSite = null
+	var picked: GSSpawnSite = null
 
 	if not inside.is_empty():
 		picked = inside[rng.randi_range(0, inside.size() - 1)]
 	elif nearest != null:
-		DotLog.debug(CHANNEL, "group radius holds no free site", {"group": _current_group, "radius": rules.group_radius})
+		GSLog.debug(CHANNEL, "group radius holds no free site", {"group": _current_group, "radius": rules.group_radius})
 		picked = nearest
 	else:
 		picked = _pick(pool, context, rng)
@@ -724,33 +724,33 @@ func _pick_grouped(pool: Array[DotSpawnSite], context: Dictionary, rng: RandomNu
 
 
 func _pick(
-	pool: Array[DotSpawnSite],
+	pool: Array[GSSpawnSite],
 	context: Dictionary,
 	rng: RandomNumberGenerator
-) -> DotSpawnSite:
+) -> GSSpawnSite:
 	if pool.is_empty():
 		return null
 
 	match rules.mode:
-		DotSpawnRules.Mode.FIRST:
+		GSSpawnRules.Mode.FIRST:
 			return pool[0]
 
-		DotSpawnRules.Mode.ROUND_ROBIN:
+		GSSpawnRules.Mode.ROUND_ROBIN:
 			var site := pool[_round_robin % pool.size()]
 			_round_robin += 1
 			return site
 
-		DotSpawnRules.Mode.RANDOM:
+		GSSpawnRules.Mode.RANDOM:
 			return pool[rng.randi_range(0, pool.size() - 1)]
 
-		DotSpawnRules.Mode.FURTHEST:
-			return DotSpawnScoring.best(pool, func(s: DotSpawnSite) -> float:
-				return DotSpawnScoring.nearest_distance(s, context.get("enemies", []))
+		GSSpawnRules.Mode.FURTHEST:
+			return GSSpawnScoring.best(pool, func(s: GSSpawnSite) -> float:
+				return GSSpawnScoring.nearest_distance(s, context.get("enemies", []))
 			)
 
-		DotSpawnRules.Mode.NEAREST_FRIEND:
-			return DotSpawnScoring.best(pool, func(s: DotSpawnSite) -> float:
-				var d := DotSpawnScoring.nearest_distance(s, context.get("friends", []))
+		GSSpawnRules.Mode.NEAREST_FRIEND:
+			return GSSpawnScoring.best(pool, func(s: GSSpawnSite) -> float:
+				var d := GSSpawnScoring.nearest_distance(s, context.get("friends", []))
 				# No friends alive is not "infinitely good"; it is no information, and
 				# a selector that treated it as a maximum would pick the most isolated
 				# site on the map for the first player of the round.
@@ -758,7 +758,7 @@ func _pick(
 			)
 
 		_:
-			return DotSpawnScoring.best(pool, func(s: DotSpawnSite) -> float: return DotSpawnScoring.score(rules, conditions, s, context))
+			return GSSpawnScoring.best(pool, func(s: GSSpawnSite) -> float: return GSSpawnScoring.score(rules, conditions, s, context))
 
 
 func _wave_origin(tick: int) -> int:

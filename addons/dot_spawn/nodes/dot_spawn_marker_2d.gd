@@ -1,10 +1,10 @@
 @tool
-class_name DotSpawnMarker2D
+class_name GSSpawnMarker2D
 extends Marker2D
 
 ## A place in a 2D level where something enters the world.
 ##
-## The 2D half of [DotSpawnMarker3D], and deliberately a separate class rather than one
+## The 2D half of [GSSpawnMarker3D], and deliberately a separate class rather than one
 ## node that branches: a [Marker2D] and a [Marker3D] cannot share a base below [Node],
 ## the editor gizmos are different, and a single node that guessed would guess wrong in
 ## the scene where it mattered.
@@ -20,7 +20,7 @@ extends Marker2D
 
 ## Higher wins a tie. A map's preferred start.
 ##
-## Named to match [DotSpawnArea3D], where it cannot be called [code]priority[/code]
+## Named to match [GSSpawnArea3D], where it cannot be called [code]priority[/code]
 ## because [Area3D] already has one.
 @export var site_priority: int = 0
 
@@ -36,8 +36,8 @@ extends Marker2D
 @export var meta: Dictionary = {}
 
 
-func to_site() -> DotSpawnSite:
-	var site := DotSpawnSite.new()
+func to_site() -> GSSpawnSite:
+	var site := GSSpawnSite.new()
 	site.id = site_id
 	site.position = Vector3(global_position.x, global_position.y, 0.0)
 	site.yaw = global_rotation

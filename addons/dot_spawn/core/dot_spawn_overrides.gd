@@ -1,4 +1,4 @@
-class_name DotSpawnOverrides
+class_name GSSpawnOverrides
 extends RefCounted
 
 ## Per-map spawn point edits an admin authors: the `spawn` profile kind, one profile per map id.
@@ -12,19 +12,19 @@ const AUTHORED := &"authored"
 
 ## The fields of a `spawn` profile.
 static func schema() -> Array:
-	return [DotProfileSet.field("points", "dict", {})]
+	return [GSProfileSet.field("points", "dict", {})]
 
 
 ## The profile set for a game's spawn overrides (`cfg/server/game/<game>/spawn/<map>.yml` over the game's).
-static func make_set(game: String, roots: PackedStringArray = PackedStringArray(), cmdline: PackedStringArray = PackedStringArray()) -> DotProfileSet:
-	var s := DotProfileSet.create(ADDON, game, KIND, schema())
+static func make_set(game: String, roots: PackedStringArray = PackedStringArray(), cmdline: PackedStringArray = PackedStringArray()) -> GSProfileSet:
+	var s := GSProfileSet.create(ADDON, game, KIND, schema())
 	s.roots = roots
 	s.cmdline = cmdline
 	return s
 
 
 ## A site as an override entry.
-static func entry_of(site: DotSpawnSite) -> Dictionary:
+static func entry_of(site: GSSpawnSite) -> Dictionary:
 	var e := {
 		"pos": [site.position.x, site.position.y, site.position.z],
 		"yaw": site.yaw,
@@ -33,7 +33,7 @@ static func entry_of(site: DotSpawnSite) -> Dictionary:
 		"weight": site.weight,
 		"tags": Array(site.tags),
 	}
-	var kind := str(site.meta.get(DotSpawnPointDef.META_KIND, ""))
+	var kind := str(site.meta.get(GSSpawnPointDef.META_KIND, ""))
 
 	if kind != "" and kind != "both":
 		e["kind"] = kind
@@ -42,7 +42,7 @@ static func entry_of(site: DotSpawnSite) -> Dictionary:
 
 
 ## Patches [param site] with the keys [param e] holds; absent keys keep the site's value.
-static func patch(site: DotSpawnSite, e: Dictionary) -> void:
+static func patch(site: GSSpawnSite, e: Dictionary) -> void:
 	var pos: Variant = e.get("pos")
 
 	if pos is Array and (pos as Array).size() == 3:
@@ -61,7 +61,7 @@ static func patch(site: DotSpawnSite, e: Dictionary) -> void:
 		site.weight = maxf(float(e["weight"]), 0.0)
 
 	if e.has("kind"):
-		site.meta[DotSpawnPointDef.META_KIND] = str(e["kind"])
+		site.meta[GSSpawnPointDef.META_KIND] = str(e["kind"])
 
 	if e.has("tags") and e["tags"] is Array:
 		var t := PackedStringArray()
@@ -73,7 +73,7 @@ static func patch(site: DotSpawnSite, e: Dictionary) -> void:
 
 
 ## Applies [param points] (the profile's mapping) to [param sites]: patches, removals and additions. Returns how many entries took effect.
-static func apply(sites: Array[DotSpawnSite], points: Dictionary) -> int:
+static func apply(sites: Array[GSSpawnSite], points: Dictionary) -> int:
 	var by_id := {}
 
 	for s in sites:
@@ -102,7 +102,7 @@ static func apply(sites: Array[DotSpawnSite], points: Dictionary) -> int:
 			patch(by_id[id], entry)
 			applied += 1
 		elif entry.has("pos"):
-			var added := DotSpawnSite.point(StringName(id), Vector3.ZERO)
+			var added := GSSpawnSite.point(StringName(id), Vector3.ZERO)
 			added.source = AUTHORED
 			patch(added, entry)
 			sites.append(added)

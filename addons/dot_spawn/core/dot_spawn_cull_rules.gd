@@ -1,6 +1,6 @@
 @tool
-class_name DotSpawnCullRules
-extends DotConfig
+class_name GSSpawnCullRules
+extends GSConfig
 
 ## Every number of the mover watch and the cull, layered config. Off by default.
 
@@ -80,26 +80,26 @@ func cli_prefix() -> String:
 	return "--cull-"
 
 
-func validate() -> DotResult:
+func validate() -> GSResult:
 	if sample_sec <= 0.0 or stuck_sec <= 0.0:
-		return DotResult.fail(DotError.CODE_INVALID, "sample_sec and stuck_sec must be above zero.")
-	return DotResult.success(null)
+		return GSResult.fail(GSError.CODE_INVALID, "sample_sec and stuck_sec must be above zero.")
+	return GSResult.success(null)
 
 
 func action_for(category: int) -> int:
 	match category:
-		DotSpawnVerdict.Category.STUCK: return stuck_action
-		DotSpawnVerdict.Category.OFF_NAV: return off_nav_action
-		DotSpawnVerdict.Category.FELL_OUT: return fell_out_action
-		DotSpawnVerdict.Category.UNREACHABLE: return unreachable_action
-		DotSpawnVerdict.Category.FAR: return far_action
-	return DotSpawnDecision.Action.IGNORE
+		GSSpawnVerdict.Category.STUCK: return stuck_action
+		GSSpawnVerdict.Category.OFF_NAV: return off_nav_action
+		GSSpawnVerdict.Category.FELL_OUT: return fell_out_action
+		GSSpawnVerdict.Category.UNREACHABLE: return unreachable_action
+		GSSpawnVerdict.Category.FAR: return far_action
+	return GSSpawnDecision.Action.IGNORE
 
 
 func after_for(category: int) -> float:
 	match category:
-		DotSpawnVerdict.Category.STUCK: return stuck_after_sec
-		DotSpawnVerdict.Category.OFF_NAV: return off_nav_after_sec
-		DotSpawnVerdict.Category.UNREACHABLE: return unreachable_after_sec
-		DotSpawnVerdict.Category.FAR: return far_after_sec
+		GSSpawnVerdict.Category.STUCK: return stuck_after_sec
+		GSSpawnVerdict.Category.OFF_NAV: return off_nav_after_sec
+		GSSpawnVerdict.Category.UNREACHABLE: return unreachable_after_sec
+		GSSpawnVerdict.Category.FAR: return far_after_sec
 	return 0.0

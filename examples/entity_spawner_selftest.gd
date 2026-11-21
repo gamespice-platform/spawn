@@ -1,6 +1,6 @@
 extends Node
 
-## Exercises DotEntitySpawner with a fake clock: pools, caps, respawn timing, seeds, profiles.
+## Exercises GSEntitySpawner with a fake clock: pools, caps, respawn timing, seeds, profiles.
 
 const SECTIONS := 10
 const CHECKS := 62
@@ -11,8 +11,8 @@ var _section_count := 0
 
 
 func _ready() -> void:
-	DotLog.set_level(DotLog.Level.FATAL)
-	_line("DotEntitySpawner self-test")
+	GSLog.set_level(GSLog.Level.FATAL)
+	_line("GSEntitySpawner self-test")
 	_test_pool()
 	_test_cap()
 	_test_timing()
@@ -44,13 +44,13 @@ func _factory(what: StringName, pos: Vector3, index: int) -> Variant:
 	return e
 
 
-func _spawner(p_seed: int = 1) -> DotEntitySpawner:
-	var s := DotEntitySpawner.new(&"t", p_seed)
+func _spawner(p_seed: int = 1) -> GSEntitySpawner:
+	var s := GSEntitySpawner.new(&"t", p_seed)
 	s.factory = _factory
 	return s
 
 
-func _run(s: DotEntitySpawner, seconds: int) -> Array:
+func _run(s: GSEntitySpawner, seconds: int) -> Array:
 	var all: Array = []
 	for i in range(seconds):
 		all.append_array(s.advance(1.0))
@@ -65,7 +65,7 @@ func _test_pool() -> void:
 	s.add_entry(&"never", 0.0)
 	s.count = 1
 	s.max_alive = 1000
-	s.respawn = DotEntitySpawner.RESPAWN_TIMER
+	s.respawn = GSEntitySpawner.RESPAWN_TIMER
 	s.interval = 1.0
 	var made := _run(s, 2000)
 	var tally := {}
@@ -80,7 +80,7 @@ func _test_pool() -> void:
 	t.add_entry(&"a", 1.0, 2)
 	t.count = 1
 	t.max_alive = 10
-	t.respawn = DotEntitySpawner.RESPAWN_TIMER
+	t.respawn = GSEntitySpawner.RESPAWN_TIMER
 	t.interval = 1.0
 	var empties := [0]
 	t.pool_empty.connect(func(): empties[0] += 1)
@@ -97,7 +97,7 @@ func _test_cap() -> void:
 	s.max_alive = 3
 	_check(s.advance(0.0).size() == 3, "initial count is clamped to max_alive")
 	_check(s.alive_count() == 3, "three alive")
-	s.respawn = DotEntitySpawner.RESPAWN_TIMER
+	s.respawn = GSEntitySpawner.RESPAWN_TIMER
 	s.interval = 1.0
 	_run(s, 5)
 	_check(s.alive_count() == 3, "the timer does not exceed max_alive")
@@ -124,7 +124,7 @@ func _test_timing() -> void:
 
 	var u := _spawner()
 	u.set_what(&"x")
-	u.respawn = DotEntitySpawner.RESPAWN_TIMER
+	u.respawn = GSEntitySpawner.RESPAWN_TIMER
 	u.interval = 4.0
 	u.max_alive = 5
 	u.count = 0
@@ -175,7 +175,7 @@ func _test_determinism() -> void:
 	_check(_sigs(s.advance(0.0)) == a, "reset restarts the stream")
 
 
-func _spawner_from(p_seed: int) -> DotEntitySpawner:
+func _spawner_from(p_seed: int) -> GSEntitySpawner:
 	var s := _spawner(p_seed)
 	s.add_entry(&"p")
 	s.add_entry(&"q")
@@ -214,8 +214,8 @@ func _write(path: String, text: String) -> void:
 	f.store_string(text)
 
 
-func _profile_set() -> DotProfileSet:
-	var set := DotEntitySpawner.profile_set("tg")
+func _profile_set() -> GSProfileSet:
+	var set := GSEntitySpawner.profile_set("tg")
 	set.roots = _roots()
 	set.cmdline = PackedStringArray(["--"])
 	return set
@@ -223,14 +223,14 @@ func _profile_set() -> DotProfileSet:
 
 func _test_profile() -> void:
 	_section("profile load")
-	var res := DotEntitySpawner.from_profile(_profile_set(), "crate", _factory)
+	var res := GSEntitySpawner.from_profile(_profile_set(), "crate", _factory)
 	_check(res.ok, "a valid profile loads")
 	if not res.ok:
 		print(res.error.message)
 		for i in range(6):
 			_check(false, "skipped")
 		return
-	var s: DotEntitySpawner = res.value
+	var s: GSEntitySpawner = res.value
 	_check(s.pool.size() == 2 and s.count == 2 and s.max_alive == 4, "pool, count and max_alive come from the file")
 	_check(s.respawn == "on_timer" and s.interval == 5.0, "respawn mode and interval")
 	_check(s.phases == PackedStringArray(["live"]), "phases")
@@ -238,42 +238,42 @@ func _test_profile() -> void:
 	_check(s.advance(10.0).is_empty(), "inactive outside its phase")
 	s.set_phase("live")
 	_check(s.advance(0.0).size() == 2, "active in its phase")
-	_check(DotEntitySpawner.profile_schemas().has("spawner"), "profile_check can find the schema")
+	_check(GSEntitySpawner.profile_schemas().has("spawner"), "profile_check can find the schema")
 
 
 func _test_bad_input() -> void:
 	_section("bad profiles")
 	for pid in ["typo", "range", "empty", "both", "noid", "negw", "missing"]:
-		var r := DotEntitySpawner.from_profile(_profile_set(), pid, _factory)
+		var r := GSEntitySpawner.from_profile(_profile_set(), pid, _factory)
 		_check(not r.ok, "'%s' is refused" % pid)
-	var r2 := DotEntitySpawner.from_profile(_profile_set(), "empty", _factory)
-	_check(not r2.ok and r2.error.code == DotError.CODE_INVALID, "an empty pool is CODE_INVALID")
+	var r2 := GSEntitySpawner.from_profile(_profile_set(), "empty", _factory)
+	_check(not r2.ok and r2.error.code == GSError.CODE_INVALID, "an empty pool is CODE_INVALID")
 
 
 func _test_legacy_folder() -> void:
 	_section("the dashed cfg/addons/dot-spawn folder")
-	DotCfgLegacy.reset()
+	GSCfgLegacy.reset()
 	var base := "user://entity_spawner_test/cfg/addons/dot-spawn/spawner"
 	DirAccess.make_dir_recursive_absolute(base)
 	_write(base.path_join("old.yml"), "what: pistol\n")
-	var r := DotEntitySpawner.from_profile(_profile_set(), "old", _factory)
+	var r := GSEntitySpawner.from_profile(_profile_set(), "old", _factory)
 	_check(r.ok, "a profile in the old dashed folder still loads")
-	_check(DotCfgLegacy.warned_count() == 1, "and warns once")
-	DotEntitySpawner.from_profile(_profile_set(), "old", _factory)
-	_check(DotCfgLegacy.warned_count() == 1, "not twice")
+	_check(GSCfgLegacy.warned_count() == 1, "and warns once")
+	GSEntitySpawner.from_profile(_profile_set(), "old", _factory)
+	_check(GSCfgLegacy.warned_count() == 1, "not twice")
 	var new_dir := "user://entity_spawner_test/cfg/addons/dot_spawn/spawner"
 	DirAccess.make_dir_recursive_absolute(new_dir)
 	_write(new_dir.path_join("old.yml"), "what: shotgun\n")
-	var r2 := DotEntitySpawner.from_profile(_profile_set(), "old", _factory)
+	var r2 := GSEntitySpawner.from_profile(_profile_set(), "old", _factory)
 	_check(r2.ok and r2.value.pool[0]["id"] == &"shotgun", "the new folder wins when both exist")
-	_check(DotEntitySpawner.ADDON == "dot_spawn", "the profile set reads the underscored folder")
+	_check(GSEntitySpawner.ADDON == "dot_spawn", "the profile set reads the underscored folder")
 	DirAccess.remove_absolute(base.path_join("old.yml"))
 	DirAccess.remove_absolute(new_dir.path_join("old.yml"))
 
 
 func _test_disabled() -> void:
 	_section("disabled and authority")
-	var r := DotEntitySpawner.from_profile(_profile_set(), "off", _factory)
+	var r := GSEntitySpawner.from_profile(_profile_set(), "off", _factory)
 	_check(r.ok and not r.value.enabled, "enabled: false loads")
 	_check(r.ok and r.value.advance(100.0).is_empty(), "a disabled spawner spawns nothing")
 	var s := _spawner()
@@ -318,13 +318,13 @@ func _test_watch_and_example() -> void:
 	s2.add_entry(&"pistol")
 	var e := s2.advance(0.0)
 	_check(e.size() == 1 and e[0].get_meta("what") == &"pistol", "the example factory receives the weapon id")
-	_check("DotEntitySpawner" in s2.describe() and s2.describe_lines().size() == 2, "describe lists the pool")
+	_check("GSEntitySpawner" in s2.describe() and s2.describe_lines().size() == 2, "describe lists the pool")
 
 
 func _test_trigger_and_limits() -> void:
 	_section("trigger and team/class limits")
 	var s := _spawner()
-	s.respawn = DotEntitySpawner.RESPAWN_TRIGGER
+	s.respawn = GSEntitySpawner.RESPAWN_TRIGGER
 	s.max_alive = 3
 	s.count = 2
 	s.set_what(&"wave")
@@ -334,7 +334,7 @@ func _test_trigger_and_limits() -> void:
 	s.trigger(5)
 	_check(_run(s, 1).size() == 1 and s.alive_count() == 3, "max_alive caps a trigger")
 	var t := _spawner()
-	t.respawn = DotEntitySpawner.RESPAWN_TIMER
+	t.respawn = GSEntitySpawner.RESPAWN_TIMER
 	t.interval = 1.0
 	t.max_alive = 10
 	t.team_limit = 2
@@ -343,7 +343,7 @@ func _test_trigger_and_limits() -> void:
 	_run(t, 60)
 	_check(t.alive_count() == 4, "team_limit 2 allows two per team across two teams")
 	var u := _spawner()
-	u.respawn = DotEntitySpawner.RESPAWN_TIMER
+	u.respawn = GSEntitySpawner.RESPAWN_TIMER
 	u.interval = 1.0
 	u.max_alive = 10
 	u.add_entry(&"boss", 1.0, -1, {"max_alive": 1})
@@ -353,14 +353,14 @@ func _test_trigger_and_limits() -> void:
 	_run(u, 5)
 	_check(u.alive_count() == 1, "and frees when the entity is gone")
 	var v := _spawner()
-	v.respawn = DotEntitySpawner.RESPAWN_TIMER
+	v.respawn = GSEntitySpawner.RESPAWN_TIMER
 	v.interval = 1.0
 	v.max_alive = 10
 	v.class_limit = 1
 	v.add_entry(&"x", 1.0, -1, {"class": "tank"})
 	_run(v, 10)
 	_check(v.alive_count() == 1, "class_limit 1 holds")
-	var res := DotEntitySpawner.from_values("p", func(k): return {"seed": 0, "what": "", "pool": [{"id": "z", "team": "red"}], "count": 1, "max_alive": 4, "interval": 1.0, "respawn_delay": 1.0, "initial_delay": 0.0, "radius": 0.0, "jitter": 0.0, "respawn": "on_trigger", "enabled": true, "server_only": true, "phases": [], "team_limit": 1, "class_limit": 0}[k], _factory)
+	var res := GSEntitySpawner.from_values("p", func(k): return {"seed": 0, "what": "", "pool": [{"id": "z", "team": "red"}], "count": 1, "max_alive": 4, "interval": 1.0, "respawn_delay": 1.0, "initial_delay": 0.0, "radius": 0.0, "jitter": 0.0, "respawn": "on_trigger", "enabled": true, "server_only": true, "phases": [], "team_limit": 1, "class_limit": 0}[k], _factory)
 	_check(res.ok and res.value.team_limit == 1 and res.value.pool[0]["team"] == "red", "a profile carries the limits and entry tags")
 
 

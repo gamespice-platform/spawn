@@ -1,4 +1,4 @@
-class_name DotSpawnRequest
+class_name GSSpawnRequest
 extends RefCounted
 
 ## Who is entering the world, on which side, as what, and when.
@@ -28,8 +28,8 @@ static func make(
 	p_class: StringName = &"",
 	p_tick: int = 0,
 	p_extra: Dictionary = {}
-) -> DotSpawnRequest:
-	var r := DotSpawnRequest.new()
+) -> GSSpawnRequest:
+	var r := GSSpawnRequest.new()
 	r.key = p_key
 	r.team = p_team
 	r.player_class = p_class
@@ -51,4 +51,4 @@ func describe() -> String:
 
 
 func _to_string() -> String:
-	return "DotSpawnRequest(%s)" % describe()
+	return "GSSpawnRequest(%s)" % describe()

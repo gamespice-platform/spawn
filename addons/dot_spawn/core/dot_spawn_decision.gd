@@ -1,4 +1,4 @@
-class_name DotSpawnDecision
+class_name GSSpawnDecision
 extends RefCounted
 
 ## What the cull decided for one mover; the host applies it.
@@ -7,7 +7,7 @@ enum Action { IGNORE, NUDGE, TELEPORT, DESPAWN, KILL }
 
 var id: Variant
 var action: int = Action.IGNORE
-var verdict: DotSpawnVerdict
+var verdict: GSSpawnVerdict
 ## Why an IGNORE was ignored (disabled, exempt, not yet, cooldown, seen); empty otherwise.
 var reason: String = ""
 
