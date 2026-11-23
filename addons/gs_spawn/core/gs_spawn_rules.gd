@@ -32,6 +32,15 @@ var mode: int = 0
 ## Score subtracted per thing already standing on a site.
 @export_range(0.0, 100000.0, 1.0) var occupancy_penalty: float = 400.0
 
+## Strict one-occupant-per-spawn. Off by default: spawns are SHARED, so a map with 19 sites
+## still holds more than 19 players and occupancy is only the soft [member occupancy_penalty].
+##
+## On, a site with an occupant is vetoed (areas are exempt; they hold several). When every
+## site is occupied the usual [member fall_back_when_nothing_passes] applies: on (the default)
+## the surplus player shares a site, loudly; off, the choice fails and the caller must wait.
+## Occupancy is whatever the game pushes through [method GSSpawnDirector.set_occupancy].
+@export var one_per_spawn: bool = false
+
 ## How much a site's own priority is worth.
 @export_range(0.0, 10000.0, 1.0) var priority_weight: float = 100.0
 

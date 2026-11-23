@@ -30,6 +30,8 @@ A request that does not carry the field at all matches every site rather than no
 
 When every site fails, one is used anyway, loudly. A round where nobody spawns is a black screen, and a black screen is indistinguishable from a crash from the player's side. The compromise is reported three ways (`GSSpawnChoice.fell_back`, a warning, and the director's `fell_back` signal) because a map whose conditions can never all be satisfied is a content bug with no other symptom.
 
+Spawns are shared by default: occupancy is only the soft `occupancy_penalty`, so 19 sites hold 40 players. `GSSpawnRules.one_per_spawn = true` adds a hard `NotOccupied` veto (areas exempt); once every site is taken, the fallback above lets the surplus player share (loudly), or with `fall_back_when_nothing_passes` off the choice fails and the caller waits.
+
 `fall_back_when_nothing_passes` can be turned off by a game that would rather know, and `GSSpawnRules.validate()` refuses the one combination where that is certainly wrong: a hard distance floor with no fallback.
 
 ## One generator per request

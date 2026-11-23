@@ -51,6 +51,9 @@ signal respawn_due(key: String, tick: int)
 ## Extra rules, consulted after the built-in filtering.
 var conditions: Array[GSSpawnCondition] = []
 
+## The hard veto [member GSSpawnRules.one_per_spawn] switches on.
+var _strict_occupancy: GSSpawnCondition = GSSpawnConditions.NotOccupied.new(true)
+
 ## `func(team: StringName) -> Array[Vector3]`. Where the other side is.
 ##
 ## Unset, every distance term scores zero and the selector falls back to priorities and
@@ -244,7 +247,13 @@ func choose_from(from: Array[GSSpawnSite], request: GSSpawnRequest) -> GSResult:
 
 		var vetoed := ""
 
+		if rules.one_per_spawn and not _strict_occupancy.allows(site, context):
+			vetoed = _strict_occupancy.reason()
+
 		for condition in conditions:
+			if vetoed != "":
+				break
+
 			if condition != null and condition.enabled and not condition.allows(site, context):
 				vetoed = condition.reason()
 				break
