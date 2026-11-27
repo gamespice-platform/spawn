@@ -1,0 +1,17 @@
+# Runtime scripts checked by gs-ci scripts/check-gd-perf.py (tools/gd_perf_lint.py).
+# One fnmatch glob per line over tracked paths. Baseline: ci/efficiency/gd-perf.tsv.
+addons/gs_spawn/core/gs_spawn_choice.gd
+addons/gs_spawn/core/gs_spawn_condition.gd
+addons/gs_spawn/core/gs_spawn_conditions.gd
+addons/gs_spawn/core/gs_spawn_cull.gd
+addons/gs_spawn/core/gs_spawn_decision.gd
+addons/gs_spawn/core/gs_spawn_protection.gd
+addons/gs_spawn/core/gs_spawn_request.gd
+addons/gs_spawn/core/gs_spawn_site.gd
+addons/gs_spawn/core/gs_spawn_verdict.gd
+addons/gs_spawn/core/gs_spawn_watch.gd
+addons/gs_spawn/runtime/gs_entity_spawner.gd
+addons/gs_spawn/runtime/gs_spawn_director.gd
+addons/gs_spawn/runtime/gs_spawn_floor_sampler.gd
+addons/gs_spawn/runtime/gs_spawn_scoring.gd
+cold+: ^(_ready|_init|_enter_tree|_exit_tree|_get_configuration_warnings|schema|profile_schemas|from_values|from_dict|to_dict|set_seed|set_what|add_entry|despawn_all|refresh|ensure_generated|_without_generated|validate|preset|presets|reason|describe|summary|kind_stats|worst_spots|_legacy_set|_pool_names|duplicate_site|_on_.*)$

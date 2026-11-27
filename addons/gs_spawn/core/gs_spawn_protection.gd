@@ -162,9 +162,12 @@ func revoke(key: String, tick: int) -> void:
 ## the ordinary case, and a HUD that hides its protection badge on that signal keeps it
 ## up forever. This family has shipped a recorder that grew without bound already.
 func advance(tick: int) -> void:
+	if _until.is_empty():
+		return
+
 	var done: Array[String] = []
 
-	for key: Variant in _until.keys():
+	for key: Variant in _until:
 		if tick >= int(_until[key]):
 			done.append(String(key))
 
