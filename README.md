@@ -2,6 +2,8 @@
 
 Decides where players, NPCs and props enter the world, and why that place rather than another. It answers the question and emits a signal; your game does the moving.
 
+GameSpice addon, MIT licence, built with Claude Code. Its headless tests are `examples/spawn_selftest.tscn` and `examples/entity_spawner_selftest.tscn`. The games in [Zee's Games](https://zeesgames.com) are built on GameSpice and run on live servers, so spawn choices here are made in real matches. Bug reports go to the [issue tracker](https://github.com/gamespice-platform/spawn/issues).
+
 ## Install
 
 1. Get [Godot 4.7](https://godotengine.org/download).
@@ -87,8 +89,27 @@ GameSpice Match has its own simpler `GSSpawnPoint` and `GSSpawnSelector` (one po
 
 Import the project once, then run the self-test scene in `examples/` headless with Godot.
 
-## Status and licence
+## Used by
 
-Part of the [**GameSpice**](https://gamespice.net) platform: a family of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/gamespice-platform/spawn/issues) when you hit one.
+All of these games from Zee's Games vendor this addon:
+
+- [Fatal Contact](https://zeesgames.com/fatal-contact)
+- [Airdrift](https://zeesgames.com/airdrift)
+- [Playlot](https://zeesgames.com/playlot)
+- [Hungario](https://zeesgames.com/hungario)
+- [Buses From Hell](https://zeesgames.com/buses-from-hell)
+- [Smash Copter](https://zeesgames.com/smash-copter)
+- [Zombie Zone](https://zeesgames.com/zombie-zone)
+- [Hide n Seek](https://zeesgames.com/hide-n-seek)
+- [Prop Hunt](https://zeesgames.com/prop-hunt)
+- [Murder Mystery](https://zeesgames.com/murder-mystery)
+- [Deathrun](https://zeesgames.com/deathrun)
+- [Wipeout](https://zeesgames.com/wipeout)
+- [Dangerous Delivery](https://zeesgames.com/dangerous-delivery)
+- [Look At Me](https://zeesgames.com/look-at-me)
+
+The whole collection is at [zeesgames.com](https://zeesgames.com).
+
+## Licence
 
 MIT licence, see [LICENSE](LICENSE). The only closed part of the [**GameSpice**](https://gamespice.net) platform is the web back end; you can use your own instead of GameSpice's.
